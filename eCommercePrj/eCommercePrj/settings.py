@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'userauths',
 ]
 
 MIDDLEWARE = [
@@ -104,14 +106,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
+# USE_I18N = True
+
+# USE_TZ = True
+
+LANGUAGE_CODE = 'tr'
+
 USE_I18N = True
 
-USE_TZ = True
+USE_L10N = True
 
+USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -127,3 +136,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+JAZZMIN_SETTINGS = {
+    "site_title": "E-Ticaret Yönetim Paneli",
+    "site_header": "Kaya Shoping",
+    "site_brand": "Kaya Shoping",
+    "welcome_sign": "E-Ticaret Yönetim Paneline Hoşgeldiniz!",
+    "copyright": "2024 Kaya Shoping",
+    "search_model": "auth.User",
+    "user_avatar": "store/user_avatar.png",
+    # Diğer özelleştirmeler...
+}
+
+AUTH_USER_MODEL = "userauths.User"
