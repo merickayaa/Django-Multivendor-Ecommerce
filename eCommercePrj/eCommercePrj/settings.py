@@ -114,7 +114,7 @@ TIME_ZONE = 'UTC'
 
 # USE_TZ = True
 
-LANGUAGE_CODE = 'tr'
+LANGUAGE_CODE = 'en'
 
 USE_I18N = True
 
