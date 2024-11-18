@@ -1,0 +1,226 @@
+{% include "partials/base.html" %} 
+
+{% load static %}
+{% load custom_filters %}
+
+{%block content %}
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Ürün Resimleri Carousel -->
+        <div class="col-md-5">
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="{{product.image.url}}" class="d-block w-100" alt="Ürün Resmi 2">
+                    </div>
+                    {% for image in p_images %}
+                    <div class="carousel-item">
+                        <img src="{{image.images.url}}" class="d-block w-100" alt="Ürün Resmi 1">
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- Kontroller -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Önceki</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Sonraki</span>
+                </button>
+            </div>
+        </div>
+        <!-- Ürün Bilgileri -->
+        <div class="col-md-5">
+            <h1 class="display-5 fw-bold">{{product.title}}</h1>
+            <p class="text-muted">Kategori: {{product.category}}</p>
+            <p class="text-muted">{{review.rating}}</p>
+            <p class="bg-info text-center border-0 rounded-pill d-flex justify-content-center align-items-center" 
+                style="width: 60px; height: 35px; font-weight: bold; font-size: 16px;">
+                    -%{{ product.get_precentage|floatformat:0 }}
+            </p>
+            <h2 class="text-primary fw-bold">
+                ₺{{ product.price }}
+            </h2>
+            <h3 class="text-muted text-decoration-line-through" style="font-size: 1.2rem;">
+                ₺{{ product.old_price }}
+            </h3>
+            
+            <p class="mt-4">
+                {{product.description|safe}}
+            </p>
+            <ul class="list-group list-group-horizontal">
+                {% if product.in_stock %}
+                <li class="list-group-item border border-0"><strong>Stok Durumu:</strong> Stokta Var</li>
+                {% else %}
+                <li class="list-group-item border border-0"><strong>Stok Durumu:</strong> Stok Yok</li>
+                {% endif %}
+                <li class="list-group-item border border-0"><strong>Eklenme Tarihi:</strong> {{product.mfd|date:"d/m/y"}}</li>
+            </ul>
+            <ul class="list-group list-group-horizontal">
+                <li class="list-group-item border border-0"><strong>Stok Kodu:</strong> {{product.sku}}</li>
+                <li class="list-group-item border border-0"><strong>Etiketler:</strong> {%for tag in product.tags.all %}<a class="btn p-0" id="tag_link" href="{% url "tags" tag.slug %}">#{{tag.name}}</a>, {% endfor %}</li>
+            </ul>
+            <p class="mt-4"></p>
+            <p class="mt-4"></p>
+            <p class="mt-4"></p>
+            <p class="mt-4"></p>
+
+
+            <!-- Sepete Ekle Butonu -->
+            <a class="btn btn-primary btn-lg mt-3">
+                <i class="bi bi-cart-fill"></i> Sepete Ekle
+            </a>
+        </div>
+        <div class="col-md-2">
+            <div class="card no-hover" style="width: 18rem;">
+                <div class="card-body">
+                  <h5 class="card-title">Teslimat</h5>
+                  <p class="card-text">{{address.address}}</p>
+                  {% if address.status == True %}
+                  <p class="card-text text-success"><small>Onaylanmis Adres</small></p>
+                  {% else %}
+                  <p class="card-text text-danger"><small>Onaylanmamis Adres</small></p>
+                  {% endif %}
+                  <p class="card-text"><small>%{{product.vendor.authentic_rating}} Degerlendirme</small></p>
+                  <p class="card-text"><small>{{product.vendor.warranty_period}} Ay Garanti</small></p>
+
+                </div>
+            </div>
+            <div class="card no-hover mt-3" style="width: 18rem;">
+                    <div class="card-body">
+                    <h5 class="card-title">Satici</h5>
+                    <p class="card-text p-0 m-0">{{product.vendor.title}}</p>
+                    <span class="p-0">✮✮✮✮✮</span>
+                    <h6 class="mt-2">Satici Adresi</h6>
+                    <p class="card-text"><small>{{product.vendor.address}}</small></p>
+                    <h6>Iletisim Bilgileri</h6>
+                    <p class="card-text"><small>{{product.vendor.contact}}</small></p>
+                    <h6>Zamaninda Teslimat</h6>
+                    <p class="card-text"><small>%{{product.vendor.shipping_on_time}}</small></p>
+                    <h6>Yanit Suresi</h6>
+                    <p class="card-text"><small>{{product.vendor.chat_resp_time}}</small></p>
+                    </div>
+            </div>
+        </div>
+    </div>
+        
+        <!-- Yorumlar Bölümü -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h3>Ürün Yorumları ({{reviews.count}})</h3>
+            <hr>
+            <div class="row">
+                <!-- Kullanıcı Yorumları -->
+                <div class="col-md-6">
+                    <h5 class="mb-4">Kullanıcı Yorumları</h5>
+                    {% for review in reviews %}
+                    <div class="card mb-4 shadow-sm border-0 no-hover">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                {{ review.user.first_name }} 
+                                <small id="rating" class="text-light">
+                                    {% for i in "1"|repeat:review.rating %}
+                                    ★
+                                    {% endfor %}
+                                    - {{ review.date|date:'d/m/y' }}
+                                </small>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ review.review }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            
+                <!-- Ürün Değerlendirmesi -->
+                <div class="col-md-6">
+                    <div class="card mb-4 shadow-sm no-hover">
+                        <div class="card-header border-0 bg-white">
+                            <h5 class="mb-0">{{ product.title }} Değerlendirmeleri</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <img src="{{ product.image.url }}" class="img-fluid mb-3 rounded" alt="Ürün Resmi" style="max-height: 200px;">
+                            <h4 class="text-warning fw-bold">
+                                <span>
+                                    {{ average_rating|floatformat:1 }}
+                                    {% for i in full_stars %}
+                                        <i class="fa-solid fa-star"></i>
+                                    {% endfor %}
+                                    {% if half_star %}
+                                        <i class="fa-solid fa-star-half-stroke"></i>
+                                    {% endif %}
+                                    {% for i in empty_stars %}
+                                        <i class="fa-regular fa-star"></i>
+                                    {% endfor %}
+                                </span>
+                            </h4>
+                            <p class="text-muted">Toplam {{ reviews|length }} yorum</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            {% if related_products %}
+            <h2>Ilgilinizi Cekebilecek Urunler</h2>
+            {% for product in related_products %}
+                <!-- Ürün 1 -->
+                <div class="col-md-3">
+                    <div class="card">
+                        <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                        <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
+                        <div class="card-body">
+                            <div class="card-title">
+                                <a href="{% url "products_detail" product.pid %}" class="btn p-0"><h5>{{product.title}}</h5></a>
+                                <p class="card-text">{{product.description|safe}}</p>
+                            </div>
+                            <p class="card-text">rating</p>
+                            <p class="card-text">{{product.price}}</p>
+                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+<!-- Footer -->
+<footer class="bg-light text-center text-lg-start mt-4">
+    <div class="container p-4">
+        <div class="row">
+            <div class="col-lg-6 col-md-12 mb-4">
+                <h5 class="text-uppercase">E-Ticaret</h5>
+                <p>En iyi ürünleri en uygun fiyata sunuyoruz.</p>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase">Bağlantılar</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-dark">Anasayfa</a></li>
+                    <li><a href="#" class="text-dark">Ürünler</a></li>
+                    <li><a href="#" class="text-dark">İletişim</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase">Bizi Takip Edin</h5>
+                <a href="#" class="btn btn-primary btn-sm me-2">Facebook</a>
+                <a href="#" class="btn btn-primary btn-sm">Instagram</a>
+            </div>
+        </div>
+    </div>
+    <div class="text-center p-3 bg-dark text-white">
+        © 2024 Tüm Hakları Saklıdır.
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{%endblock content%}

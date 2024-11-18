@@ -23,18 +23,34 @@
                         <!-- Carousel İçeriği -->
                         <div class="carousel-inner">
                             <!-- Ürün 1 -->
+                             {% for product in last_products %}
                             <div class="carousel-item active">
                                 <div class="card shadow-lg">
-                                    <img src="{% static 'assets/imgs/clock.jpg' %}" style="width: 250px;" class="card-img-top"
-                                        alt="Ürün 1">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">EN SON EKLENENLER</h5>
-                                        <p class="card-text text-muted">₺99.99</p>
+                                    <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                                    <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1" style="width: 100%; height: 250px; object-fit: contain;">
+                                    <div class="card-body">
+                                        <div class="card-title">
+                                            <a href="#" class="btn p-0"><h5>{{product.title}}</h5></a>
+                                            <p class="card-text">{{product.description|safe}}</p>
+                                        </div>
+                                        <p class="card-text text-warning fw-bold">
+                                            {% for i in product.full_stars %}
+                                                <i class="fa-solid fa-star"></i>
+                                            {% endfor %}
+                                            {% if product.half_star %}
+                                                <i class="fa-solid fa-star-half-stroke"></i>
+                                            {% endif %}
+                                            {% for i in product.empty_stars %}
+                                                <i class="fa-regular fa-star"></i>
+                                            {% endfor %}
+                                        </p>
+                                        <p class="card-text">{{product.price}}</p>
                                         <a href="#" class="btn btn-primary">Sepete Ekle</a>
                                     </div>
                                 </div>
                             </div>
-                            <!-- Ürün 2 -->
+                            {% endfor %}
+                            {% comment %} <!-- Ürün 2 -->
                             <div class="carousel-item">
                                 <div class="card shadow-lg">
                                     <img src="{% static 'assets/imgs/clock.jpg' %}" style="width: 250px;" class="card-img-top"
@@ -57,7 +73,7 @@
                                         <a href="#" class="btn btn-primary">Sepete Ekle</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> {% endcomment %}
                         </div>
 
                         <!-- Carousel Kontrolleri -->
@@ -90,18 +106,34 @@
                         <!-- Carousel İçeriği -->
                         <div class="carousel-inner">
                             <!-- Ürün A -->
+                            {% for product in last_products %}
                             <div class="carousel-item active">
                                 <div class="card shadow-lg">
-                                    <img src="{% static 'assets/imgs/clock.jpg' %}" style="width: 250px;" class="card-img-top"
-                                        alt="Ürün A">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">EN SON BAKTIKLARIM</h5>
-                                        <p class="card-text text-muted">₺89.99</p>
+                                    <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                                    <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1" style="width: 100%; height: 250px; object-fit: contain;">
+                                    <div class="card-body">
+                                        <div class="card-title">
+                                            <a href="#" class="btn p-0"><h5>{{product.title}}</h5></a>
+                                            <p class="card-text">{{product.description|safe}}</p>
+                                        </div>
+                                        <p class="card-text text-warning fw-bold">
+                                            {% for i in product.full_stars %}
+                                                <i class="fa-solid fa-star"></i>
+                                            {% endfor %}
+                                            {% if product.half_star %}
+                                                <i class="fa-solid fa-star-half-stroke"></i>
+                                            {% endif %}
+                                            {% for i in product.empty_stars %}
+                                                <i class="fa-regular fa-star"></i>
+                                            {% endfor %}
+                                        </p>
+                                        <p class="card-text">{{product.price}}</p>
                                         <a href="#" class="btn btn-primary">Sepete Ekle</a>
                                     </div>
                                 </div>
                             </div>
-                            <!-- Ürün B -->
+                            {% endfor %}
+                            {% comment %} <!-- Ürün B -->
                             <div class="carousel-item">
                                 <div class="card shadow-lg">
                                     <img src="{% static 'assets/imgs/clock.jpg' %}" style="width: 250px;" class="card-img-top"
@@ -124,7 +156,7 @@
                                         <a href="#" class="btn btn-primary">Sepete Ekle</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> {% endcomment %}
                         </div>
 
                         <!-- Carousel Kontrolleri -->
@@ -147,49 +179,68 @@
         <!-- Ürünler -->
         <div class="container">
             <div class="row">
+                {% for product in products %}
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 1">
+                        <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                        <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
                         <div class="card-body">
-                            <h5 class="card-title">Ürün 1</h5>
-                            <p class="card-text">₺99.99</p>
+                            <div class="card-title">
+                                <a href="{% url "products_detail" product.pid %}" class="btn p-0"><h5>{{product.title}}</h5></a>
+                                <p class="card-text">{{product.description|safe}}</p>
+                            </div>
+                            <p class="card-text text-warning fw-bold">
+                                {% for i in product.full_stars %}
+                                    <i class="fa-solid fa-star"></i>
+                                {% endfor %}
+                                {% if product.half_star %}
+                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                {% endif %}
+                                {% for i in product.empty_stars %}
+                                    <i class="fa-regular fa-star"></i>
+                                {% endfor %}
+                            </p>
+                            <p class="card-text">{{product.price}}</p>
                             <a href="#" class="btn btn-primary">Sepete Ekle</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 1">
-                        <div class="card-body">
-                            <h5 class="card-title">Ürün 1</h5>
-                            <p class="card-text">₺99.99</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 1">
-                        <div class="card-body">
-                            <h5 class="card-title">Ürün 1</h5>
-                            <p class="card-text">₺99.99</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 2">
-                        <div class="card-body">
-                            <h5 class="card-title">Ürün 2</h5>
-                            <p class="card-text">₺199.99</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                        </div>
-                    </div>
-                </div>
+                {% endfor %}
+                
+
+        <!-- Gunun Firsatlari --> 
+
                 <div class="row">
-                    <h3>GÜNÜN FIRSATLARI</h3>
+                    {% if featured_products %}
+                    <h3>One Cikanlar</h3>
+                    {% for product in featured_products %}
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card">
+                            <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                            <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
+                            <div class="card-body">
+                                <div class="card-title">
+                                    <a href="#" class="btn p-0"><h5>{{product.title}}</h5></a>
+                                    <p class="card-text">{{product.description|safe}}</p>
+                                </div>
+                                <p class="card-text text-warning fw-bold">
+                                    {% for i in product.full_stars %}
+                                        <i class="fa-solid fa-star"></i>
+                                    {% endfor %}
+                                    {% if product.half_star %}
+                                        <i class="fa-solid fa-star-half-stroke"></i>
+                                    {% endif %}
+                                    {% for i in product.empty_stars %}
+                                        <i class="fa-regular fa-star"></i>
+                                    {% endfor %}
+                                </p>
+                                <p class="card-text">{{product.price}}</p>
+                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                    {% comment %} <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                         <div class="card">
                             <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 2">
                             <div class="card-body">
@@ -218,18 +269,9 @@
                                 <a href="#" class="btn btn-primary">Sepete Ekle</a>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                        <div class="card">
-                            <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 2">
-                            <div class="card-body">
-                                <h5 class="card-title">Ürün 2</h5>
-                                <p class="card-text">₺199.99</p>
-                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                            </div>
-                        </div>
-                    </div>
+                    </div> {% endcomment %}
                 </div>
+                {% endif %}
 
                 <!-- Diğer ürünler -->
             </div>

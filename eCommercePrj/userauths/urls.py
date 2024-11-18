@@ -21,8 +21,8 @@ from . import views
 app_name = "userauths"
 
 urlpatterns = [
-    path('/signup', views.signUp, name='signup'),
-    path('/signin', views.signIn, name='signin'),
-    path('/signout', views.logOut, name='signout'),
+    path('signup/', views.signUp, name='signup'),
+    path('signin/', views.signIn, name='signin'),
+    path('signout/', views.logOut, name='signout'),
 
 ] 

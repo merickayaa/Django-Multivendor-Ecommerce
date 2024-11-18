@@ -20,4 +20,18 @@ from django.urls import path, include
 from . import views
 urlpatterns = [
     path('', views.index, name='index'),
+    path('products/', views.products_list_view, name='products_list'),
+    path('categories/', views.category_list_view, name='category_list'),
+    path('categories/<cid>/', views.category_product_list_view, name='category_product_list'),
+    path('vendor/<vid>/', views.vendor_detail_view, name='vendors_detail'),
+    path('vendor/<vid>/profile', views.vendor_about_view, name='vendors_about'),
+    path('vendor/<vid>/products', views.vendor_products_list_view, name='vendors_products'),
+    path('product/<pid>', views.product_detail_view, name='products_detail'),
+    path('products/tag/<slug:tag_slug>/', views.tag_list_view, name='tags'),
+    path('search/', views.search_view, name='search'),
+    path('products/filter/', views.filter_view, name='filter'),
+
+
+
+
 ] 

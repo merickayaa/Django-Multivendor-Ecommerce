@@ -120,6 +120,11 @@
             transform: scale(1.05);
             transition: transform 0.3s;
         }
+        .no-hover:hover {
+            background-color: inherit; /* Varsayılan arka plan */
+            transform: none; /* Büyüme efektini kaldır */
+            transition: none; /* Geçiş efektini kaldır */
+        }
 
         .card-img-top {
             height: 250px;
@@ -130,6 +135,28 @@
             .carousel {
                 margin-bottom: 20px;
             }
+        }
+        .custom-select {
+            width: 250px;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+        }
+        
+        .custom-select:hover {
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .custom-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0px 0px 0px 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        #tag_link:hover {
+            border-bottom: 1px solid #007bff;
         }
     </style>
 </head>
@@ -144,13 +171,13 @@
                     <a class="nav-link navbar-brand ml-2" aria-current="page" href="{% url "index" %}">
                         <button type="button" class="btn btn-info">Anasayfa</button>
                     </a>
-                    <a class="nav-link navbar-brand ml-2" aria-current="page" href="categories.html">
+                    <a class="nav-link navbar-brand ml-2" aria-current="page" href="{% url "category_list" %}">
                         <button type="button" class="btn btn-info">Kategoriler</button>
                     </a>
                     <!-- Search Form -->
                     <div class="navbar-brand mx-auto">
-                        <form class="d-flex" role="search">
-                            <input class="form-control me-2" type="search" placeholder="Bu Ortaya Alinacak" aria-label="Search">
+                        <form class="d-flex" role="search" action="{% url "search" %}" method="GET">
+                            <input class="form-control me-2" type="search" placeholder="Bu Ortaya Alinacak" aria-label="Search" name="q">
                             <button class="btn btn-outline-info" type="submit">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </button>
@@ -163,7 +190,7 @@
                     </button>
                     <!-- Right Side -->
                     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                        {% if user %}
+                        {% if request.user.is_authenticated %}
                         <!-- User Dropdown -->
                         <div class="dropdown">
                             <button type="button"
@@ -173,7 +200,7 @@
                                     <span class="badge bg-warning me-2">
                                         <i class="fa-regular fa-user" style="width: 20px;"></i>
                                     </span>
-                                    {{user.first_name}}
+                                    {{request.user.first_name}}
                                 </a>
                             </button>
                             <ul class="dropdown-menu">
@@ -200,7 +227,6 @@
                                 </li>
                             </ul>
                         </div>
-                        {% endif %}
                         <!-- Cart Button -->
                         <button type="button" class="btn btn-info d-flex align-items-center justify-content-center m-2">
                             <a class="nav-link m-0" href="#">
@@ -210,13 +236,31 @@
                                 Sepet
                             </a>
                         </button>
-                        {% if request.user.is_authenticated %}
+                        
                         <button type="button" class="btn btn-info d-flex align-items-center justify-content-center m-2">
                             <a class="nav-link m-0" href="{% url "userauths:signout" %}">
                                 <span class="badge bg-warning me-2">
                                     <i class="fa-solid fa-right-from-bracket"></i>
                                 </span>
                                 Cikis Yap
+                            </a>
+                        </button>
+                        {%else%}
+                        <button type="button" class="btn btn-info d-flex align-items-center justify-content-center m-2">
+                            <a class="nav-link m-0" href="{% url "userauths:signin" %}">
+                                <span class="badge bg-warning me-2">
+                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                </span>
+                                Giris Yap
+                            </a>
+                        </button>
+                        <!-- Cart Button -->
+                        <button type="button" class="btn btn-info d-flex align-items-center justify-content-center m-2">
+                            <a class="nav-link m-0" href="#">
+                                <span class="badge bg-warning me-2">
+                                    <i class="fa-solid fa-basket-shopping"></i>
+                                </span>
+                                Sepet
                             </a>
                         </button>
                         {% endif %}

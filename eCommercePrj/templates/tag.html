@@ -1,0 +1,92 @@
+{% include "partials/base.html" %} 
+
+{% load static %}
+
+{%block content %}
+    <!-- Ürün Listeleme Bölümü -->
+            <div class="col-md-9 mt-3">
+                <h4>Ürünler</h4>
+                <div class="row">
+                    {% for product in products %}
+                    <!-- Ürün 1 -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                            <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
+                            <div class="card-body">
+                                <div class="card-title">
+                                    <a href="{% url "products_detail" product.pid %}" class="btn p-0"><h5>{{product.title}}</h5></a>
+                                    <p class="card-text">{{product.description|safe}}</p>
+                                </div>
+                                <p class="card-text text-warning fw-bold">
+                                    {% for i in product.full_stars %}
+                                        <i class="fa-solid fa-star"></i>
+                                    {% endfor %}
+                                    {% if product.half_star %}
+                                        <i class="fa-solid fa-star-half-stroke"></i>
+                                    {% endif %}
+                                    {% for i in product.empty_stars %}
+                                        <i class="fa-regular fa-star"></i>
+                                    {% endfor %}
+                                </p>
+                                <p class="card-text">{{product.price}}</p>
+                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+    
+                    {% comment %} <!-- Ürün 2 -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <img src="https://via.placeholder.com/250" class="card-img-top" alt="Ürün 2">
+                            <div class="card-body">
+                                <h5 class="card-title">Ürün 2</h5>
+                                <p class="card-text">₺199.99</p>
+                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Ürün 3 -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <img src="https://via.placeholder.com/250" class="card-img-top" alt="Ürün 3">
+                            <div class="card-body">
+                                <h5 class="card-title">Ürün 3</h5>
+                                <p class="card-text">₺249.99</p>
+                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                            </div>
+                        </div>
+                    </div> {% endcomment %}
+    
+                </div>
+            </div>
+            <!-- Footer -->
+<footer class="bg-light text-center text-lg-start mt-4">
+    <div class="container p-4">
+        <div class="row">
+            <div class="col-lg-6 col-md-12 mb-4">
+                <h5 class="text-uppercase">E-Ticaret</h5>
+                <p>En iyi ürünleri en uygun fiyata sunuyoruz.</p>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase">Bağlantılar</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-dark">Anasayfa</a></li>
+                    <li><a href="#" class="text-dark">Ürünler</a></li>
+                    <li><a href="#" class="text-dark">İletişim</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase">Bizi Takip Edin</h5>
+                <a href="#" class="btn btn-primary btn-sm me-2">Facebook</a>
+                <a href="#" class="btn btn-primary btn-sm">Instagram</a>
+            </div>
+        </div>
+    </div>
+    <div class="text-center p-3 bg-dark text-white">
+        © 2024 Tüm Hakları Saklıdır.
+    </div>
+</footer>
+{% endblock %}
