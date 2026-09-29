@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satıcı Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/03397e9a7e.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 250px;
+            background-color: #343a40;
+            color: #fff;
+            padding-top: 30px;
+        }
+
+        .side-menu a {
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .side-menu a:hover {
+            background-color: #495057;
+            color: #fff;
+        }
+
+        .side-menu .active {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .side-menu .logo {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+        }
+
+        .card.shadow-sm {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+        }
+
+        .stat-card.bg-primary {
+            background-color: #007bff;
+        }
+
+        .stat-card.bg-success {
+            background-color: #28a745;
+        }
+
+        .stat-card.bg-info {
+            background-color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="side-menu">
+        <div class="logo">Satıcı Paneli</div>
+        <a href="{% url 'useradmin:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" id="homeLink">
+            <i class="bi bi-house-door-fill me-2"></i> Ana Sayfa
+        </a>
+        <a href="{% url 'useradmin:products' %}" class="{% if request.resolver_match.url_name == 'products' %}active{% endif %}" id="productsLink">
+            <i class="bi bi-box me-2"></i> Ürünlerim
+        </a>
+        <a href="{% url "useradmin:orders" %}" class="{% if request.resolver_match.url_name == 'orders' %}active{% endif %}" id="ordersLink">
+            <i class="bi bi-cart-fill me-2"></i> Siparişler
+        </a>
+        <a href="{% url "useradmin:shop_page" %}" class="{% if request.resolver_match.url_name == 'earnings' %}active{% endif %}" id="earningsLink">
+            <i class="bi bi-cash-stack me-2"></i> Magaza Sayfasi
+        </a>
+        <a href="{% url "useradmin:reviews" %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}" id="profileLink">
+            <i class="bi bi-person-circle me-2"></i> Degerlendirmeler
+        </a>
+        <a href="{% url 'useradmin:settings' %}" id="settings" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <i class="bi bi-plus-circle me-2"></i> Ayarlar
+        </a>
+        <a href="{% url "useradmin:change_password" %}" id="change_password" class="btn btn-danger mt-3">
+            <i class="bi bi-plus-circle me-2"></i> Sifreni Degistir
+        </a>
+        <a href="{% url 'useradmin:add_product' %}" id="addProductLink" class="btn btn-success mt-3">
+            <i class="bi bi-plus-circle me-2"></i> Yeni Ürün Ekle
+        </a>
+        <a href="{% url "index" %}" class="text-danger" id="logoutLink">
+            <i class="bi bi-box-arrow-left me-2"></i> Çıkış
+        </a>
+    </div>
+    {% block content %}
+        
+    {% endblock content %}

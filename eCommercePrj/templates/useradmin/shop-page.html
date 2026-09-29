@@ -1,0 +1,54 @@
+{% include "useradmin/partials/base.html" %}
+
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Satıcı Bilgileri ve Toplam Satış -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Satıcı Bilgileri</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Satici Ismi</h5>
+                    <p class="card-text">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+                    <h5 class="card-title mt-4">Email</h5>
+                    <p class="card-text">{{ request.user.email }}</p>
+                    <h5 class="card-title mt-4">Description</h5>
+                    <p class="card-text">{{ request.user.profile.bio }}</p>
+                    <h5 class="card-title mt-4">Toplam Gelir</h5>
+                    <p class="card-text">₺{{ revenue.price|floatformat:2 }}</p>
+                    <h5 class="card-title mt-4">Toplam Satış Adedi</h5>
+                    <p class="card-text">{{ total_sales.quantity }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ürün Listesi -->
+    <h3 class="text-center mb-4">Ürünler</h3>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.title }}</h5>
+                    <p class="card-text">₺{{ product.price|floatformat:2 }}</p>
+                    <p class="card-text">{{ product.description|truncatewords:15|safe }}</p>
+                    <a href="{% url 'useradmin:edit_product' product.pid %}" class="btn btn-primary">Detaylar</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning" role="alert">
+                Henüz ürün eklenmemiş.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

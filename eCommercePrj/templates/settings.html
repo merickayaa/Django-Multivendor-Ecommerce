@@ -1,0 +1,39 @@
+{% include "partials/base.html" %} 
+
+{% load static %}
+
+{%block content %}
+    <div class="container mt-5">
+        <h2 class="mb-4">Settings</h2>
+        {% if messages %}
+            {% for m in messages %}
+                {{m}}
+            {% endfor %}
+        {% endif %}
+        <form method="POST" action="">
+            {% csrf_token %}
+            <!-- Kullanıcı Adı -->
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" id="username" placeholder="Enter your username" value="{{profile.user.username}}">
+            </div>
+            <!-- E-posta -->
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" id="email" placeholder="Enter your email" value="{{profile.user.email}}">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+            <!-- Şifre Güncelleme -->
+            <div class="mt-3">
+            <a href="{% url "change_password" %}" class="btn btn-primary">Sifreyi Degistir</a>
+                
+            </div>
+            <!-- Kayıt Butonu -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+{%endblock content%}

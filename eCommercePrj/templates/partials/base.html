@@ -90,24 +90,6 @@
             margin-right: 10px;
         }
 
-        html,
-        body {
-            height: 100%;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .content {
-            flex: 1 0 auto;
-        }
-
-        footer {
-            flex-shrink: 0;
-        }
-
         /* Ekstra Stil (İsteğe Bağlı) */
         .carousel-control-prev-icon,
         .carousel-control-next-icon {
@@ -158,10 +140,52 @@
         #tag_link:hover {
             border-bottom: 1px solid #007bff;
         }
+        .content_form {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .content_form2 {
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Buton stili */
+        .toggle-button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .toggle-button:hover {
+            background-color: #45a049;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .content {
+            flex: 1 0 auto; 
+        }
+        
+        footer {
+            flex-shrink: 0; 
+            margin-top: auto;
+        }
     </style>
 </head>
-
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script rel="javascript" type="text/javascript" src="{% static "assets/js/function.js" %}"></script>
 <body>
+{% csrf_token %}
+
     <div class="d-flex flex-column min-vh-100">
         <div class="container">
             <!-- NavBar -->
@@ -204,22 +228,31 @@
                                 </a>
                             </button>
                             <ul class="dropdown-menu">
+                                {% if request.user.is_superuser %}
                                 <li>
-                                    <a class="dropdown-item" href="#">
+                                    <a class="dropdown-item" href="{% url "useradmin:dashboard" %}">
+                                        <button type="button" class="btn btn-info w-100 text-center">
+                                            Satici Paneli
+                                        </button>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url "dashboard" %}">
                                         <button type="button" class="btn btn-info w-100 text-center">
                                             Hesabim
                                         </button>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="orders.html">
+                                    <a class="dropdown-item" href="{% url "orders" %}">
                                         <button type="button" class="btn btn-info w-100 text-center">
                                             Siparişlerim
                                         </button>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="#">
+                                    <a class="dropdown-item" href="{% url "wishlist" %}">
                                         <button type="button" class="btn btn-info w-100 text-center">
                                             Beğendiklerim
                                         </button>
@@ -229,11 +262,13 @@
                         </div>
                         <!-- Cart Button -->
                         <button type="button" class="btn btn-info d-flex align-items-center justify-content-center m-2">
-                            <a class="nav-link m-0" href="#">
+                            <a class="nav-link m-0" href="{% url "cart" %}">
                                 <span class="badge bg-warning me-2">
                                     <i class="fa-solid fa-basket-shopping"></i>
                                 </span>
-                                Sepet
+                                <span class="cart-items-count">
+                                Sepet {{cart|length}}
+                                </span>
                             </a>
                         </button>
                         
@@ -256,11 +291,13 @@
                         </button>
                         <!-- Cart Button -->
                         <button type="button" class="btn btn-info d-flex align-items-center justify-content-center m-2">
-                            <a class="nav-link m-0" href="#">
+                            <a class="nav-link m-0" href="{% url "cart" %}">
                                 <span class="badge bg-warning me-2">
                                     <i class="fa-solid fa-basket-shopping"></i>
                                 </span>
-                                Sepet
+                                <span class="cart-items-count">
+                                    Sepet {{request.session.cart_data_obj|length}}
+                                </span>
                             </a>
                         </button>
                         {% endif %}

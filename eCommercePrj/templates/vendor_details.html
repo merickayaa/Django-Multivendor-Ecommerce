@@ -67,12 +67,20 @@
                              {% for product in last_products %}
                             <div class="carousel-item active">
                                 <div class="card shadow-lg no-hover">
+                                    {% if request.user.is_authenticated %}
+                                    <button type="button" class="btn float-left add-to-wishlist" data-product-item="{{product.id}}" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                                    {% endif %}
                                     <img src="{{product.image.url}}" class="text-center" style="width: 250px;" class="card-img-top"
                                         alt="Ürün 1">
                                     <div class="card-body text-center">
                                         <h5 class="card-title">{{product.title}}</h5>
-                                        <p class="card-text text-muted">{{product.price}}</p>
-                                        <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                                        <p class="card-text">₺<span class="current-product-price-{{product.id}}">{{product.price}}</span></p>
+                                        <input type="hidden" value="1" id="product-quantity" class="product-quantity-{{product.id}}">
+                                        <input type="hidden" value="{{product.pid}}" class="product-pid-{{product.id}}">
+                                        <input type="hidden" value="{{product.image}}" class="product-image-{{product.id}}">
+                                        <input type="hidden" value="{{product.id}}" class="product-id-{{product.id}}">
+                                        <input type="hidden" value="{{product.title}}" class="product-title-{{product.id}}">
+                                        <button class="btn btn-primary add-to-cart-btn" id="add-to-cart-btn" data-index="{{product.id}}">Sepete Ekle</button>
                                     </div>
                                 </div>
                             </div>
@@ -103,11 +111,19 @@
                 {% for product in products  %}
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card">
+                        {% if request.user.is_authenticated %}
+                        <button type="button" class="btn float-left add-to-wishlist" data-product-item="{{product.id}}" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                        {% endif %}
                         <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
                         <div class="card-body">
                             <h5 class="card-title">{{product.title}}</h5>
-                            <p class="card-text">{{product.price}}</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                            <p class="card-text">₺<span class="current-product-price-{{product.id}}">{{product.price}}</span></p>
+                            <input type="hidden" value="1" id="product-quantity" class="product-quantity-{{product.id}}">
+                            <input type="hidden" value="{{product.pid}}" class="product-pid-{{product.id}}">
+                            <input type="hidden" value="{{product.image}}" class="product-image-{{product.id}}">
+                            <input type="hidden" value="{{product.id}}" class="product-id-{{product.id}}">
+                            <input type="hidden" value="{{product.title}}" class="product-title-{{product.id}}">
+                            <button class="btn btn-primary add-to-cart-btn" id="add-to-cart-btn" data-index="{{product.id}}">Sepete Ekle</button>
                         </div>
                     </div>
                 </div>
@@ -130,9 +146,9 @@
                     <div class="col-lg-3 col-md-6 mb-4">
                         <h5 class="text-uppercase">Bağlantılar</h5>
                         <ul class="list-unstyled">
-                            <li><a href="#" class="text-dark">Anasayfa</a></li>
-                            <li><a href="#" class="text-dark">Ürünler</a></li>
-                            <li><a href="#" class="text-dark">İletişim</a></li>
+                            <li><a href="{% url "index" %}" class="text-dark">Anasayfa</a></li>
+                            <li><a href="{% url "products_list" %}" class="text-dark">Ürünler</a></li>
+                            <li><a href="{% url "contactUs" %}" class="text-dark">İletişim</a></li>
                         </ul>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-4">

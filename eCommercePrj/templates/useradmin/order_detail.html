@@ -1,0 +1,158 @@
+{% include "useradmin/partials/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container my-5">
+    <!-- Müşteri Bilgileri, Sipariş Detayları ve Adres Bilgileri Yan Yana Düzen -->
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+        <!-- Müşteri Bilgileri -->
+        <div class="col">
+            <div class="card shadow-sm" style="height: 450px;">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Müşteri Bilgileri</h4>
+                </div>
+                <div class="card-body">
+                    <div class="col-md-6">
+                        <h5 class="fw-bold text-dark">Adı Soyadı:</h5>
+                        <p class="text-muted">{{ order.user.first_name }} {{ order.user.last_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="fw-bold text-dark">E-posta:</h5>
+                        <p class="text-muted">{{ order.user.email }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="fw-bold text-dark">Telefon:</h5>
+                        <p class="text-muted">{{ order.user.phone }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sipariş Detayları -->
+        <div class="col">
+            <div class="card shadow-sm mb-4" style="height: 450px;">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Sipariş Bilgileri</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Sipariş ID:</h5>
+                            <p class="text-muted">{{ order.oid }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Tarih:</h5>
+                            <p class="text-muted">{{ order.order_date|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Toplam Tutar:</h5>
+                            <p class="text-success fw-bold">₺{{ order.price }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Sipariş Durumu:</h5>
+                            <span class="badge {% if order.product_status == 'process' %}bg-warning text-dark{% elif order.product_status == 'completed' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ order.product_status|title }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3 d-flex align-items-center">
+                        <h5 class="fw-bold text-dark me-3 mb-0">Kargo Durumu:</h5>
+                        <form method="POST" action="{% url "useradmin:change_order_status" order.oid %}" class="input-group">
+                            <select name="status" class="form-select" aria-label="Kargo Durumu Seçimi" style="max-width: 200px;">
+                                <option value="process" {% if order.product_status == 'process' %}selected{% endif %}>Hazırlanıyor</option>
+                                <option value="shipped" {% if order.product_status == 'shipped' %}selected{% endif %}>Kargoya Verildi</option>
+                                <option value="delivered" {% if order.product_status == 'delivered' %}selected{% endif %}>Teslim Edildi</option>
+                            </select>
+                            <button class="btn btn-primary ms-2" type="submit">Kaydet</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adres Bilgileri -->
+        <div class="col">
+            <div class="card shadow-sm mb-4" style="height: 450px;">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Adres Bilgileri</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Adres Başlığı:</h5>
+                            <p class="text-muted">{{ address.title }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Teslim Alacak:</h5>
+                            <p class="text-muted">{{ address.user.first_name }} {{ address.user.last_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Telefon:</h5>
+                            <p class="text-muted">{{ address.phone }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Adres:</h5>
+                            <p class="text-muted">{{ address.address }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">Durum:</h5>
+                            <span class="badge {% if address.status %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if address.status %}Aktif{% else %}Pasif{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3 d-flex align-items-center">
+                        <h5 class="fw-bold text-dark me-3 mb-0">Adres Durumu:</h5>
+                        <div class="input-group">
+                            <select class="form-select" aria-label="Adres Durumu Seçimi" style="max-width: 200px;">
+                                <option value="True" {% if address.status %}selected{% endif %}>Aktif</option>
+                                <option value="False" {% if not address.status %}selected{% endif %}>Pasif</option>
+                            </select>
+                            <button class="btn btn-success ms-2">Kaydet</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ürünler Section -->
+    <h4 class="fw-bold text-dark mb-3">Ürünler</h4>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Resim</th>
+                    <th>Ürün Adı</th>
+                    <th>Adet</th>
+                    <th>Birim Fiyat</th>
+                    <th>Toplam</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order_items.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <img src="{{MEDIA_URL}}{{ item.image }}" alt="{{ item.item }}" class="img-fluid rounded" style="width: 100px; height: auto;">
+                    </td>
+                    <td>{{ item.item }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₺{{ item.price }}</td>
+                    <td>₺{{ item.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock content %}

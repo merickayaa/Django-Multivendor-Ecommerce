@@ -1,0 +1,170 @@
+{% include "partials/base.html" %}
+
+{% load static %}
+
+{%block content %}
+
+<!-- İçerik -->
+<div class="content mt-4">
+    <div class="container">
+        {% if messages %}
+        <div class="mt-3">
+            {% for m in messages %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ m }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+        <h3 class="ml-5">SEPETIM</h3>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-8">
+                {% for item in cart_data %}
+                <div class="card mb-3 cart">
+                    <div class="row g-0 shadow-sm p-3 mb-3 bg-body rounded">
+                        <div class="col-md-4 text-center d-flex align-items-center justify-content-center">
+                            <img src="{{ MEDIA_URL }}{{ item.image }}" style="max-width: 200px; border-radius: 10px;" class="img-fluid" alt="Ürün Resmi">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card h-100 border-0 no-hover">
+                                <div class="card-header bg-transparent border-bottom-0 pb-2">
+                                    <span class="float-start text-muted"><small>Satıcı:</small> <strong class="text-dark">{{ item.vendor }}</strong></span>
+                                    <span class="float-end text-success fw-bold">Kargo Bedava</span>
+                                </div>
+                                <div class="card-body pt-0">
+                                    <h5 class="card-title mb-2 text-primary">{{ item.title }}</h5>
+                                    <p class="card-text text-secondary">
+                                        <button class="btn btn-outline-danger btn-sm border-0 decrease-btn"><i class="fa-solid fa-trash"></i></button>
+                                        <span class="mx-2 fw-bold quantity">{{ item.quantity }}</span>
+                                        <button class="btn btn-outline-success btn-sm border-0 increase-btn"><i class="fa-solid fa-plus"></i></button>
+                                    </p>
+                                    <p class="card-text fw-bold fs-5 price"><span>Birim Fiyat: </span>₺{{ item.price|floatformat:2 }}</p>
+                                    <p class="card-text fw-bold fs-5 product-total"><span>Toplam Tutar: </span>₺{{ item.total_price|floatformat:2 }}</p>
+                                </div>
+                                <input type="hidden" value="{{item.pid}}" class="product-pid">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p>Sepetiniz boş.</p>
+                {% endfor %}
+
+
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm rounded border-0 no-hover" style="max-width: 18rem;">
+                    <div class="card-header bg-white card text-dark border-0 no-hover">
+                        <h6 class="mb-0">Seçilen Ürünler <span class="badge bg-primary rounded-pill cart-items-count">{{ totalcartitems }}</span></h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-success fw-bold mb-3 cart-total-amount" id="total-price">₺{{ cart_total_amount|floatformat:2 }}</h5>
+                        <a href="{% url "checkout" %}" class="btn btn-primary w-100 fw-bold">Alışverişi Tamamla</a>
+                    </div>
+                    <div class="card-footer">
+                        <span class="float-end" data-bs-toggle="collapse" data-bs-target="#cartDetails"
+                            style="cursor: pointer;">
+                            ▼
+                        </span>
+                        <small class="float-start">Urunler</small> <span
+                            class="float-end cart-total-amount">{{cart_total_amount}}</span><br>
+                        <!-- Ürün Detayları -->
+                        <div class="collapse border-0" id="cartDetails">
+                            <ul class="list-group border-0">
+                            {% for item in cart_data %}
+                                <li class="list-group-item d-flex bg-light justify-content-between align-items-center border-0 p-0 product-item" id="product-{{ item.pid }}">
+                                    <small>{{ item.title }} (<span class="quantity">{{ item.quantity }}</span> x ₺{{ item.price|floatformat:2 }})</small>
+                                    <small class="product-total">₺{{ item.total_price|floatformat:2 }}</small>
+                                </li>
+                                <hr class="p-0 m-0">
+                            {% endfor %}
+                            </ul>
+                        </div>
+                        <small class="float-start">Kargo</small> <span class="float-end">Bedava</span>
+                    </div>
+                </div>
+                {% if addresses %}
+                <div class="card shadow-sm rounded border-0 no-hover mt-5" style="max-width: 18rem;">
+                    <div class="card-header bg-white card text-dark border-0 no-hover">
+                        <h6 class="mb-0">Adres Sec</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        {% for address in addresses %}
+                        <h5 class="card-title">{{address.title}}</h5>
+                        {% if address.status %}
+                        <i data-address-id = {{address.id}} class="fa-solid fa-check text-success check{{address.id}}"></i>
+                        <button data-address-id = {{address.id}} style="display: none;" class="btn btn-outline-primary btn-sm rounded-pill make-default-address button{{address.id}} action_btn"><i class="bi bi-star-fill check"></i> Sec</button>
+                        {% else %}
+                        <i data-address-id = {{address.id}} style="display: none;" class="fa-solid fa-check text-success check{{address.id}} "></i>
+                        <button data-address-id = {{address.id}} class="btn btn-outline-primary btn-sm rounded-pill make-default-address button{{address.id}} action_btn">
+                            <i class="bi bi-star-fill"></i> Sec
+                        </button>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="card shadow-sm rounded border-0 no-hover mt-5" style="max-width: 18rem;">
+                    <div class="card-header bg-white card text-dark border-0 no-hover">
+                        <h6 class="mb-0">Lutfen Adres Ekleyiniz</h6>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- İçerik End -->
+
+<!-- Footer -->
+<footer class="bg-light text-center text-lg-start mt-4">
+    <div class="container p-4">
+        <div class="row">
+            <div class="col-lg-6 col-md-12 mb-4">
+                <h5 class="text-uppercase">E-Ticaret</h5>
+                <p>En iyi ürünleri en uygun fiyata sunuyoruz.</p>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase">Bağlantılar</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url "index" %}" class="text-dark">Anasayfa</a></li>
+                    <li><a href="{% url "products_list" %}" class="text-dark">Ürünler</a></li>
+                    <li><a href="{% url "contactUs" %}" class="text-dark">İletişim</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase">Bizi Takip Edin</h5>
+                <a href="#" class="btn btn-primary btn-sm me-2">Facebook</a>
+                <a href="#" class="btn btn-primary btn-sm">Instagram</a>
+            </div>
+        </div>
+    </div>
+    <div class="text-center p-3 bg-dark text-white">
+        © 2024 Tüm Hakları Saklıdır.
+    </div>
+</footer>
+</div>
+
+<!-- Footer End -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+<script>
+    let techDrop = document.getElementById('techDropdown')
+    let techDropdownList = document.getElementById('techDropdownList')
+    function dropdownOver(document) {
+        document.style.display = 'block'
+    }
+    function dropdownOut(document) {
+        document.style.display = 'none'
+    }
+</script>
+
+</html>
+{% endblock %}

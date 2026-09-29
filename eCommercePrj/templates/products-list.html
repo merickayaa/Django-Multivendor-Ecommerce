@@ -6,7 +6,7 @@
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-12">
-                <select class="form-select float-end custom-select" aria-label="Default select example">
+                <select name="sorting" class="form-select float-end custom-select" aria-label="Default select example">
                     <option selected>Önerilen</option>
                     <option value="1">En düşük fiyat</option>
                     <option value="2">En yüksek fiyat</option>
@@ -17,18 +17,19 @@
             </div>
             <!-- Filtre Bölümü -->
             <div class="col-md-3 mt-3">
-                    <div class="card no-hover p-4 shadow-sm no-style">
+                <div class="card no-hover p-4 shadow-sm no-style">
+                    <form action="{% url "filter" %}" method="GET">
+                        <input type="hidden" name="q" value="{{query}}">
                         <h4 class="mb-3">Filtreler</h4>
                         <hr>
                         <!-- Kategori Filtreleme -->
                         <h5 class="mb-3">Kategori</h5>
                         <div class="form-group mb-4">
                             {% for c in categories %}
-                                    <div class="form-check mb-2">
-                                        <a href="{% url "category_product_list" c.cid %}" class="text-dark btn {% if category.cid == c.cid %}bg-danger text-light{% else %}text-dark{% endif %}">
-                                            {{ c.title }}
-                                        </a>
-                                    </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" {% if category == c.cid %}checked{% endif %} data-filter="category" type="radio" name="category" value="{{c.cid}}">
+                                    <label class="form-check-label">{{c.title}}</label>
+                                </div>
                             {% endfor %}
                         </div>
                         <hr>
@@ -37,42 +38,43 @@
                         <h5 class="mb-3">Fiyat Aralığı</h5>
                         <div class="form-group mb-3">
                             <label for="fiyatMin" class="form-label">Min:</label>
-                            <input type="number" id="fiyatMin" class="form-control" placeholder="Min fiyat" name = "min_price">
+                            <input type="number" id="fiyatMin" class="form-control" placeholder="{% if min_price %}{{min_price}}{% else %}Min fiyat{% endif %}" name="min_price">
                         </div>
                         <div class="form-group mb-4">
                             <label for="fiyatMax" class="form-label">Max:</label>
-                            <input type="number" id="fiyatMax" class="form-control" placeholder="Max fiyat" name = "max_price">
+                            <input type="number" id="fiyatMax" class="form-control" placeholder="{% if max_price %}{{max_price}}{% else %}Max fiyat{% endif %}" name="max_price">
                         </div>
                         <hr>
-                        {% if category %}
-                        <!-- Marka Filtreleme -->
-                        <h5 class="mb-3">Marka</h5>
-                        {% for brand in brands %}
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="brand">
-                                <label class="form-check-label">{{brand.title}}</label>
+                            <!-- Marka Filtreleme -->
+                            <h5 class="mb-3">Marka</h5>
+                            <div class="form-group mb-4">
+                                {% for b in brands %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" {% if brand == b.bid %}checked{% endif %} data-filter="brand" type="radio" name="brand" value="{{ b.bid }}">
+                                        <label class="form-check-label">{{ b.title }}</label>
+                                    </div>
+                                {% endfor %}
                             </div>
-                        {% endfor %}        
-                        <hr>
-                        {% endif %}
+                            <hr>
                         <!-- Değerlendirme Filtreleme -->
                         <h5 class="mb-3">Değerlendirme</h5>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="rating">
+                            <input class="form-check-input" type="radio" name="rating" {% if not value %}value=""{% endif %}>
                             <label class="form-check-label">5 Yıldız</label>
                         </div>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="rating">
+                            <input class="form-check-input" type="radio" name="rating" {% if not value %}value=""{% endif %}>
                             <label class="form-check-label">4 Yıldız ve üzeri</label>
                         </div>
                         <div class="form-check mb-4">
-                            <input class="form-check-input" type="radio" name="rating">
+                            <input class="form-check-input" type="radio" name="rating" {% if not value %}value=""{% endif %}>
                             <label class="form-check-label">3 Yıldız ve üzeri</label>
                         </div>     
 
                         <!-- Filtreyi Uygula Butonu -->
                         <button type="submit" class="btn btn-primary w-100 mt-3">Filtreyi Uygula</button>
-                    </div>
+                    </form>
+                </div>
             </div>
 
     
@@ -80,11 +82,14 @@
             <div class="col-md-9 mt-3">
                 <h4>Ürünler</h4>
                 <div class="row">
+                    {% if products %}
                     {% for product in products %}
                     <!-- Ürün 1 -->
                     <div class="col-md-4">
                         <div class="card">
-                            <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                            {% if request.user.is_authenticated %}
+                            <button type="button" class="btn float-left add-to-wishlist" data-product-item="{{product.id}}" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                            {% endif %}
                             <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
                             <div class="card-body">
                                 <div class="card-title">
@@ -102,37 +107,22 @@
                                         <i class="fa-regular fa-star"></i>
                                     {% endfor %}
                                 </p>
-                                <p class="card-text">{{product.price}} TL</p>
-                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                                <p class="card-text">₺<span class="current-product-price">{{product.price}}</span></p>
+                                <input type="hidden" value="1" id="product-quantity" class="product-quantity">
+                                <input type="hidden" value="{{product.pid}}" class="product-pid">
+                                <input type="hidden" value="{{product.image}}" class="product-image">
+                                <input type="hidden" value="{{product.id}}" class="product-id">
+                                <input type="hidden" value="{{product.title}}" class="product-title">
+                                <input type="hidden" value="{{ product.vendor }}" class="product-vendor" />
+
+                                <button class="btn btn-primary add-to-cart-btn" id="add-to-cart-btn">Sepete Ekle</button>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
-    
-                    {% comment %} <!-- Ürün 2 -->
-                    <div class="col-md-4">
-                        <div class="card">
-                            <img src="https://via.placeholder.com/250" class="card-img-top" alt="Ürün 2">
-                            <div class="card-body">
-                                <h5 class="card-title">Ürün 2</h5>
-                                <p class="card-text">₺199.99</p>
-                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                            </div>
-                        </div>
-                    </div>
-    
-                    <!-- Ürün 3 -->
-                    <div class="col-md-4">
-                        <div class="card">
-                            <img src="https://via.placeholder.com/250" class="card-img-top" alt="Ürün 3">
-                            <div class="card-body">
-                                <h5 class="card-title">Ürün 3</h5>
-                                <p class="card-text">₺249.99</p>
-                                <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                            </div>
-                        </div>
-                    </div> {% endcomment %}
-    
+                    {% else %}
+                    <h1 class="text-center">Bu Kategoride Urun Bulunmamaktadir.</h1>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -148,9 +138,9 @@
             <div class="col-lg-3 col-md-6 mb-4">
                 <h5 class="text-uppercase">Bağlantılar</h5>
                 <ul class="list-unstyled">
-                    <li><a href="#" class="text-dark">Anasayfa</a></li>
-                    <li><a href="#" class="text-dark">Ürünler</a></li>
-                    <li><a href="#" class="text-dark">İletişim</a></li>
+                    <li><a href="{% url "index" %}" class="text-dark">Anasayfa</a></li>
+                    <li><a href="{% url "products_list" %}" class="text-dark">Ürünler</a></li>
+                    <li><a href="{% url "contactUs" %}" class="text-dark">İletişim</a></li>
                 </ul>
             </div>
             <div class="col-lg-3 col-md-6 mb-4">

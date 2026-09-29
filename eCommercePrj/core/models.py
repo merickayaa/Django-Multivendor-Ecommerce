@@ -1,6 +1,6 @@
 from django.db import models
 from shortuuid.django_fields import ShortUUIDField
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from userauths.models import User
 from datetime import datetime,timezone
 from taggit.managers import TaggableManager
@@ -20,8 +20,8 @@ STATUS = (
     ("rejected", "Rejected"),
     ("in_review", "In_Review"),
     ("published", "Published"),
-
 )
+
 RATING = (
     (1, "✮☆☆☆☆"),
     (2, "✮✮☆☆☆"),
@@ -46,7 +46,7 @@ class Category(models.Model):
         verbose_name_plural = "Categories"
 
     def category_image(self):
-        return mark_safe('<img src="%s" width="50" height="50"/>' % (self.image.url))
+        return format_html('<img src="{}" width="50" height="50"/>', self.image.url)
     
     def __str__(self):
         return self.title
@@ -54,11 +54,12 @@ class Category(models.Model):
 class Brand(models.Model):
     bid = ShortUUIDField(unique=True, length=10, max_length=20, prefix="bra", alphabet="abcdefgh12345")
     title = models.CharField(max_length=100, default="Brand Name")
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    categories = models.ManyToManyField(Category, blank=True, related_name="brands")
     class Meta:
         verbose_name_plural = "Brands"
     def __str__(self):
         return self.title
+    
 class Tags(models.Model):
     pass
 
@@ -67,21 +68,21 @@ class Vendor(models.Model):
     title = models.CharField(max_length=100, default="Vendor Name")
     image = models.ImageField(upload_to=user_directory_path)
     description = RichTextUploadingField(null=True,blank=True, default="Vendor Desc")
-    adress = models.CharField(max_length=100, default="Istanbul")
+    address = models.CharField(max_length=100, default="Istanbul")
+    country = models.CharField(max_length=200, null=True,blank=True)
     contact = models.CharField(max_length=100, default="+90 555 555 55 55")
     chat_resp_time = models.CharField(max_length=100, default="100")
     shipping_on_time = models.CharField(max_length=100, default="100")
     authentic_rating = models.CharField(max_length=100, default="100")
     days_return = models.CharField(max_length=100, default="100")
     warranty_period = models.CharField(max_length=100, default="100")
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-
     class Meta:
         verbose_name_plural = "Vendors"
 
     def vendor_image(self):
-        return mark_safe('<img src="%s" width="50" height="50"/>' % (self.image.url))
+        return format_html('<img src="{}" width="50" height="50"/>', self.image.url)
     def time_since_joined(self):
         now = datetime.now(timezone.utc)
         days = (now - self.date).days
@@ -102,23 +103,19 @@ class Product(models.Model):
     pid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefgh12345")
     title = models.CharField(max_length=100, default="Product Name")
     image = models.ImageField(upload_to=user_directory_path)
-    #description = models.TextField(null=True,blank=True, default="This is a Product")
     description = RichTextUploadingField(null=True,blank=True, default="This is a Product")
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name="category")
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, related_name="brand")
-    vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True, related_name="vendor")
-    price = models.DecimalField(max_digits=99999999999, decimal_places=2, default=1.99)
-    old_price = models.DecimalField(max_digits=99999999999, decimal_places=2, default=2.99)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, null=True, related_name="vendor")
+    price = models.DecimalField(max_digits= 12, decimal_places= 2, default=1.99)
     specifications = RichTextUploadingField(null=True,blank=True, default="This is a Product")
-    stock_count = models.CharField(max_length=100, default="10", null=True, blank=True)
-    mfd = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-    tags = TaggableManager(blank=True)
+    # stock_count = models.CharField(max_length=100, default="10", null=True, blank=True)
+    # mfd = models.DateTimeField(auto_now_add=False, null=True, blank=True)
+    # tags = TaggableManager(blank=True)
     product_status = models.CharField(choices=STATUS, max_length=10, default="in_review")
-    status = models.BooleanField(default=True)
-    in_stock = models.BooleanField(default=True)
+    # in_stock = models.BooleanField(default=True)
     featured = models.BooleanField(default=False)
-    digital = models.BooleanField(default=False)
+    # digital = models.BooleanField(default=False)
     sku = ShortUUIDField(unique=True, length=4, max_length=10, prefix="sku", alphabet="1234567890")
     date = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(null=True, blank=True)
@@ -129,19 +126,15 @@ class Product(models.Model):
 
     def product_image(self):
         print(self.image.url)
-        return mark_safe('<img src="%s" width="50" height="50"/>' % (self.image.url))
+        return format_html('<img src="{}" width="50" height="50" />', self.image.url)
         
 
     def __str__(self):
         return self.title
     
-    def get_precentage(self):
-        new_price = (self.price / self.old_price) * 100
-        return new_price
-    
 class ProductImages(models.Model):
     images = models.ImageField(upload_to="product-images")
-    product = models.ForeignKey(Product,related_name="p_images", on_delete=models.SET_NULL, null=True)
+    product = models.ForeignKey(Product, related_name="product_images", on_delete=models.CASCADE, null=True)
     date = models.DateTimeField(auto_now_add=True)
     
     
@@ -157,27 +150,43 @@ class ProductImages(models.Model):
 
 
 
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, related_name="product_cart", null=True)
+    # title = models.CharField(max_length=200)
+    quantity = models.IntegerField(default=1)
+    # price = models.DecimalField(max_digits=10, decimal_places=2)
+    # image = models.CharField(max_length=200)
+    # vendor = models.CharField(max_length=100)
+    # added_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}"
+
 class CartOrder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=99999999999, decimal_places=2, default=1.99)
+    oid = ShortUUIDField(unique=True, length=4, max_length=10, alphabet="1234567890")
+    invoice_no = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=1.99)
     paid_status = models.BooleanField(default=False)
     order_date = models.DateTimeField(auto_now_add=True)
     product_status = models.CharField(choices=STATUS_CHOICE, max_length=10, default="process")
     class Meta:
         verbose_name_plural = "Cart Order"
+
 class CartOrderItems(models.Model):
     order = models.ForeignKey(CartOrder, on_delete=models.CASCADE)
-    invoice_no = models.CharField(max_length=200)
-    product_status = models.CharField(max_length=200)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    product_status = models.CharField(choices=STATUS_CHOICE, max_length=200, default="process")
     item = models.CharField(max_length=200)
     image = models.CharField(max_length=200)
     quantity = models.IntegerField(default=0)
-    price = models.DecimalField(max_digits=99999999999, decimal_places=2, default=1.99)
-    total = models.DecimalField(max_digits=99999999999, decimal_places=2, default=1.99)
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=1.99)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=1.99)
     class Meta:
         verbose_name_plural = "Cart Order Items"
     def order_image(self):
-        return mark_safe('<img src="/media/%s" width="50" height="50"/>' % (self.image.url))
+        return format_html('<img src="/media/{}" width="50" height="50"/>', self.image.url)
 
 
 
@@ -202,7 +211,7 @@ class ProductReview(models.Model):
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
-    rating = models.IntegerField(choices=RATING, default=None)
+    rating = models.IntegerField(choices=RATING, default=None, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
 
@@ -213,8 +222,12 @@ class Wishlist(models.Model):
         return self.product.title
     
 class Address(models.Model):
+    # aid = ShortUUIDField(unique=True, length=10, max_length=20,prefix="loc", alphabet="abcdefgh12345")
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='+')
+    title = models.CharField(max_length=100, default="Home")
+    phone = models.CharField(max_length=300,null=True)
     address = models.CharField(max_length=100, null=True)
+    country = models.CharField(max_length=100, null=True)
     status = models.BooleanField(default=False)
 
     class Meta:

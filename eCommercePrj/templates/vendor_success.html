@@ -1,0 +1,16 @@
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4 text-center">Başvurunuz Başarıyla Alındı!</h2>
+    <p class="mb-4 text-center">Satıcı olma başvurunuz başarıyla kaydedildi. Başvurunuz yönetici tarafından incelenecek ve onaylandığında size bildirilecektir.</p>
+    
+    <div class="text-center">
+        <a href="{% url 'index' %}" class="btn btn-primary">Ana Sayfaya Dön</a>
+    </div>
+
+    <div class="mt-5 text-center">
+        <p>Başvuru sürecinizi takip etmek için <a href="{% url 'useradmin:dashboard' %}">satıcı panelinize</a> göz atabilirsiniz.</p>
+    </div>
+</div>
+{% endblock %}

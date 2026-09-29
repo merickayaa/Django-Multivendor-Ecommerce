@@ -53,7 +53,7 @@
                 <div class="container mt-5">
                     <div class="row">
                         <div class="col-md-12">
-                            <select class="form-select float-end custom-select" aria-label="Default select example">
+                            <select name="sorting" class="form-select float-end custom-select" aria-label="Default select example">
                                 <option selected>Önerilen</option>
                                 <option value="1">En düşük fiyat</option>
                                 <option value="2">En yüksek fiyat</option>
@@ -137,7 +137,9 @@
                                 <!-- Ürün 1 -->
                                 <div class="col-md-4">
                                     <div class="card">
-                                        <button type="button" class="btn float-left" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                                        {% if request.user.is_authenticated %}
+                                        <button type="button" class="btn float-left add-to-wishlist" data-product-item="{{product.id}}" style="width: 20px;"><i class="fa-regular fa-heart"></i></button>
+                                        {% endif %}
                                         <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
                                         <div class="card-body">
                                             <div class="card-title">
@@ -155,8 +157,13 @@
                                                     <i class="fa-regular fa-star"></i>
                                                 {% endfor %}
                                             </p>
-                                            <p class="card-text">{{product.price}}</p>
-                                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
+                                            <p class="card-text">₺<span class="current-product-price-{{product.id}}">{{product.price}}</span></p>
+                                            <input type="hidden" value="1" id="product-quantity" class="product-quantity-{{product.id}}">
+                                            <input type="hidden" value="{{product.pid}}" class="product-pid-{{product.id}}">
+                                            <input type="hidden" value="{{product.image}}" class="product-image-{{product.id}}">
+                                            <input type="hidden" value="{{product.id}}" class="product-id-{{product.id}}">
+                                            <input type="hidden" value="{{product.title}}" class="product-title-{{product.id}}">
+                                            <button class="btn btn-primary add-to-cart-btn" id="add-to-cart-btn" data-index="{{product.id}}">Sepete Ekle</button>
                                         </div>
                                     </div>
                                 </div>
@@ -196,53 +203,6 @@
             </html>
             </div>
         </div>
-
-        <!-- Ürünler -->
-        <div class="container mt-3">
-            <div class="row">
-                <h2 class="mb-3">Urunler</h2>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 1">
-                        <div class="card-body">
-                            <h5 class="card-title">Ürün 1</h5>
-                            <p class="card-text">₺99.99</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 1">
-                        <div class="card-body">
-                            <h5 class="card-title">Ürün 1</h5>
-                            <p class="card-text">₺99.99</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 1">
-                        <div class="card-body">
-                            <h5 class="card-title">Ürün 1</h5>
-                            <p class="card-text">₺99.99</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Ürün 2">
-                        <div class="card-body">
-                            <h5 class="card-title">Ürün 2</h5>
-                            <p class="card-text">₺199.99</p>
-                            <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Diğer ürünler -->
-            </div>
         </div>
 
 
@@ -260,9 +220,9 @@
                     <div class="col-lg-3 col-md-6 mb-4">
                         <h5 class="text-uppercase">Bağlantılar</h5>
                         <ul class="list-unstyled">
-                            <li><a href="#" class="text-dark">Anasayfa</a></li>
-                            <li><a href="#" class="text-dark">Ürünler</a></li>
-                            <li><a href="#" class="text-dark">İletişim</a></li>
+                            <li><a href="{% url "index" %}" class="text-dark">Anasayfa</a></li>
+                            <li><a href="{% url "products_list" %}" class="text-dark">Ürünler</a></li>
+                            <li><a href="{% url "contactUs" %}" class="text-dark">İletişim</a></li>
                         </ul>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-4">

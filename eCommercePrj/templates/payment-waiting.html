@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ödeme İşleniyor</title>
+</head>
+<body>
+    <h1>Ödeme İşleniyor</h1>
+    <p>Lütfen ödemenizin doğrulanmasını bekleyin. Bu işlem birkaç saniye sürebilir.</p>
+    <p>Fatura Numarası: {{ invoice }}</p>
+    <script>
+        // Doğrulama tamamlandığında kullanıcıyı otomatik yönlendirin
+        setTimeout(() => {
+            window.location.href = "{% url 'payment_completed' %}?invoice={{ invoice }}";
+        }, 15000); // 10 saniye bekle
+    </script>
+</body>
+</html>

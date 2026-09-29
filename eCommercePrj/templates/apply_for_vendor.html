@@ -1,0 +1,85 @@
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Satıcı Olma Başvurusu</h2>
+    <p class="mb-4">Satıcı olabilmek için aşağıdaki bilgileri doldurun. Başvurunuz yönetici tarafından incelenecektir.</p>
+
+    <form method="POST" enctype="multipart/form-data" class="p-4 rounded shadow-sm bg-light">
+        {% csrf_token %}
+        
+        <!-- Satıcı Başlık / Firma Adı -->
+        <div class="form-group mb-4">
+            <label for="title" class="form-label">Satıcı Adı</label>
+            <input type="text" class="form-control form-control-lg" id="title" name="title" value="{{ profile.full_name }}" required placeholder="Satıcı adı veya firma adı girin">
+        </div>
+    
+        <!-- Satıcı Resmi -->
+        <div class="form-group mb-4">
+            <label for="image" class="form-label">Satıcı Görseli</label>
+            <input type="file" class="form-control form-control-lg" id="image" name="image" accept="image/*" required>
+            <small class="form-text text-muted">Görseliniz, satış profilinizde görünecektir. (JPG, PNG veya GIF)</small>
+        </div>
+    
+        <!-- Açıklama -->
+        <div class="form-group mb-4">
+            <label for="description" class="form-label">Açıklama</label>
+            <input value="{{ profile.bio }}" class="form-control form-control-lg" id="description" name="description" rows="4" required placeholder="Satıcı hakkında kısa bir açıklama yazın.">
+            <small class="form-text text-muted">Açıklamanız, müşterilerin sizi tanımasına yardımcı olur.</small>
+        </div>
+    
+        <!-- Adres -->
+        <div class="form-group mb-4">
+            <label for="address" class="form-label">Adres</label>
+            <input value="{{ profile.address }}" type="text" class="form-control form-control-lg" id="address" name="address" required placeholder="Adresinizi girin">
+        </div>
+
+        <!-- Ulke -->
+        <div class="form-group mb-4">
+            <label for="country" class="form-label">Ulke</label>
+            <input value="{{ profile.country }}" type="text" class="form-control form-control-lg" id="country" name="country" required placeholder="Ulkenizi girin">
+        </div>
+    
+        <!-- İletişim Bilgileri -->
+        <div class="form-group mb-4">
+            <label for="contact" class="form-label">İletişim Numarası</label>
+            <input value="{{ profile.phone }}" type="text" class="form-control form-control-lg" id="contact" name="contact" required placeholder="Telefon numaranızı girin">
+            <small class="form-text text-muted">Müşterilerinizle kolayca iletişime geçebilmeniz için geçerli bir telefon numarası girin.</small>
+        </div>
+    
+        <!-- Chat Yanıt Süresi -->
+        <div class="form-group mb-4">
+            <label for="chat_resp_time" class="form-label">Chat Yanıt Süresi (dakika)</label>
+            <input value="0" type="number" class="form-control form-control-lg" id="chat_resp_time" name="chat_resp_time" required placeholder="Chat yanıt süresi girin">
+        </div>
+    
+        <!-- Teslimat Süresi -->
+        <div class="form-group mb-4">
+            <label for="shipping_on_time" class="form-label">Teslimat Süresi (%)</label>
+            <input value="0" type="number" class="form-control form-control-lg" id="shipping_on_time" name="shipping_on_time" required placeholder="Teslimat süresi girin">
+            <small class="form-text text-muted">Teslimatlarınızın zamanında yapılma oranını belirtin.</small>
+        </div>
+    
+        <!-- İade Süresi -->
+        <div class="form-group mb-4">
+            <label for="days_return" class="form-label">İade Süresi (gün)</label>
+            <input value="0" type="number" class="form-control form-control-lg" id="days_return" name="days_return" required placeholder="İade süresi girin">
+            <small class="form-text text-muted">Müşterilerinizin ürünleri iade edebileceği süreyi girin.</small>
+        </div>
+    
+        <!-- Gönder Butonu -->
+        <button type="submit" class="btn btn-lg btn-success w-100 mt-4">Başvuruyu Gönder</button>
+    </form>
+    
+</div>
+<script>
+    let techDrop = document.getElementById('techDropdown')
+    let techDropdownList = document.getElementById('techDropdownList')
+    function dropdownOver(document) {
+        document.style.display = 'block'
+    }
+    function dropdownOut(document) {
+        document.style.display = 'none'
+    }
+</script>
+{% endblock %}

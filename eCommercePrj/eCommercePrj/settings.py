@@ -25,12 +25,16 @@ SECRET_KEY = 'django-insecure-g+xwin)9)rfpb#rpe1-p-mtq*5s2l0l49yg+9k1@w84=$qc1e&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["1a42-85-104-69-218.ngrok-free.app","127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["https://1a42-85-104-69-218.ngrok-free.app"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.humanize',
+    'reportlab',
+    'paypal.standard.ipn',
     'ckeditor',
     'ckeditor_uploader',
     'jazzmin',
@@ -80,13 +84,23 @@ WSGI_APPLICATION = 'eCommercePrj.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'e_commerce',
+        'USER': 'root',
+        'PASSWORD': 'Kws5SPx20qMrP.',
+        'HOST': 'django-project-db.cfsyoaks0gdj.eu-north-1.rds.amazonaws.com',
+        'PORT': '3306',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -114,15 +128,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 TIME_ZONE = 'UTC'
 
-# USE_I18N = True
-
-# USE_TZ = True
-
 LANGUAGE_CODE = 'en'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
@@ -154,6 +162,11 @@ JAZZMIN_SETTINGS = {
     # Diğer özelleştirmeler...
 }
 
+LOGIN_URL = "userauths:signin"
 AUTH_USER_MODEL = "userauths.User"
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Oturumları veritabanında saklar
+
+PAYPAL_RECEIVER_EMAIL = 'merickay0@yandex.com'
+PAYPAL_TEST = True

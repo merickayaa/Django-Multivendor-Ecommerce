@@ -1,0 +1,106 @@
+{% include "useradmin/partials/base.html" %}
+{% load static %}
+{% load humanize %}
+{{ form.media }}
+{% block content %}
+<div class="container mt-5">
+    <h2>Yeni Ürün Ekle</h2>
+    {% if form.errors %}
+        <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+    
+    <!-- Ürün Ekleme Formu -->
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="id_title" class="form-label">Ürün Adı</label>
+            {{ form.title }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="id_image" class="form-label">Ürün Resmi</label>
+            {{ form.image }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="id_description" class="form-label">Açıklama</label>
+            {{ form.description }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="id_category" class="form-label">Kategori</label>
+            {{ form.category }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="id_brand" class="form-label">Marka</label>
+            {{ form.brand }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="id_price" class="form-label">Fiyat</label>
+            {{ form.price }}
+        </div>
+        
+        {% comment %} <div class="mb-3">
+            <label for="id_stock_count" class="form-label">Stok</label>
+            {{ form.stock_count }}
+        </div> {% endcomment %}
+        
+        {% comment %} <div class="mb-3">
+            <label for="id_mfd" class="form-label">Üretim Tarihi</label>
+            {{ form.mfd }}
+        </div> {% endcomment %}
+        
+        {% comment %} <div class="mb-3">
+            <label for="id_tags" class="form-label">Etiketler</label>
+            {{ form.tags }}
+        </div> {% endcomment %}
+
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const categoryField = document.getElementById('id_category');
+        const brandField = document.getElementById('id_brand');
+    
+        // İlk başta marka alanını temizle
+        brandField.innerHTML = '<option value="">Marka Seçin</option>';
+    
+        // Kategori seçildiğinde markaları güncelle
+        categoryField.addEventListener('change', function () {
+            const selectedCategory = categoryField.value;
+    
+            if (selectedCategory) {
+                fetch(`/useradmin/api/get_brands_by_category/${selectedCategory}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Marka seçeneklerini güncelle
+                        brandField.innerHTML = '<option value="">Marka Seçin</option>'; // Eski markaları temizle
+                        data.brands.forEach(brand => {
+                            const option = document.createElement('option');
+                            option.value = brand.id;
+                            option.textContent = brand.title;
+                            brandField.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching brands:', error));
+            } else {
+                // Kategori seçilmediğinde marka alanını temizle
+                brandField.innerHTML = '<option value="">Marka Seçin</option>';
+            }
+        });
+    });
+</script>
+{% endblock content %}

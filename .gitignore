@@ -1,0 +1,35 @@
+# Sanal ortam (venv)
+myEcommerceWorld/
+venv/
+.venv/
+env/
+
+# Python derleme dosyaları
+__pycache__/
+*.py[cod]
+
+# Veritabanı
+eCommercePrj/db.sqlite3
+eCommercePrj/data.json
+fixtures/
+
+# collectstatic çıktısı (her zaman yeniden üretilebilir)
+eCommercePrj/staticfiles/
+
+# Kullanıcıların yüklediği dosyalar
+eCommercePrj/media/
+
+# Gizli ayarlar (SECRET_KEY vb. .env'e taşınınca)
+.env
+*.env
+
+# Editör / işletim sistemi
+.vscode/
+.idea/
+.claude/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Log dosyaları
+*.log

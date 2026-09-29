@@ -1,0 +1,200 @@
+{% include "partials/base.html" %}
+
+{% load static %}
+
+{%block content %}
+
+        <div class="content">
+            <!-- Content -->
+            <div class=" mt-4 container">
+                <!-- Banner -->
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        <div class="card mb-3" style="background-color: rgb(69, 150, 255);">
+                            <div class="row g-0">
+                                <div class="col-md-9 align-self-center">
+                                    <div class="card-body d-flex">
+                                        {% if profile.image %}
+                                        <img src="{{profile.image.url}}" class="img-fluid me-3" width="200" alt="Profile Image">
+                                        {% endif %}
+                                        <div>
+                                            {% if profile.full_name %}
+                                            <h5 class="card-title">{{profile.full_name}}</h5>
+                                            {% endif %}
+                                            <p class="card-text mb-1"><small
+                                                    class="text-body-secondary">{{profile.user.email}}</small></p>
+                                            {% if profile.bio %}
+                                            <p class="card-text mb-1"><small class="text-body-secondary">{{profile.bio}}</small></p>
+                                            {% endif %}
+                                            {% if profile.phone %}
+                                            <p class="card-text mb-1"><small class="text-body-secondary">{{profile.phone}}</small>
+                                            </p>
+                                            {% endif %}
+                                            {% if profile.verified %}
+                                            <span class="">Verified</span>
+                                            <i class="fa-solid fa-check ms-1"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="card-footer border border-0 " style="background-color: rgb(69, 150, 255);">
+                                        <ul class="list-inline d-flex justify-content-center">
+                                            <!-- Anasayfa Butonu -->
+                                            <button type="button" class="btn btn-info" data-bs-toggle="modal"
+                                                data-bs-target="#editProfileModal">
+                                                Edit Profile
+                                            </button>
+                                            <li class="list-inline-item ml-4">
+                                                <a href="{% url "settings" %}" class="btn btn-info">Settings</a>
+                                            </li>
+                                            <li class="list-inline-item ml-4">
+                                                <a href="{% url "orders" %}" class="btn btn-info">My Orders</a>
+                                            </li>
+                                            <li class="list-inline-item ml-4">
+                                                <a href="{% url "wishlist" %}" class="btn btn-info">Wishlist</a>
+                                            </li>
+                                            <li class="list-inline-item ml-4">
+                                                <a href="{% url "addresses" %}" class="btn btn-info">My Addresses</a>
+                                            </li>
+                                            {% if request.user.is_vendor %}
+                                            <li class="list-inline-item ml-4">
+                                                <a href="{% url 'useradmin:dashboard' %}" class="btn btn-info">Satıcı Paneli</a>
+                                            </li>
+                                            {% else %}
+                                            <li class="list-inline-item ml-4">
+                                                <a href="{% url 'apply_for_vendor' %}" class="btn btn-info">Satıcı Olmak İstiyorum</a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if orders %}
+                    <div class="col-md-12 mb-4">
+                        <h4><b>My Orders</b></h4>
+                        <!-- Sipariş Tablosu -->
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sipariş Satırı Örneği -->
+                                {% for o in orders %}
+                                <tr>
+                                    <td>INVOICE-NO-{{o.id}}</td>
+                                    <td>{{o.order_date}}</td>
+                                    <td><span class="badge bg-success">{{o.product_status}}</span></td>
+                                    <td>${{o.price}}</td>
+                                    <td>
+                                        <a href="{% url "order_detail" o.id %}" class="btn btn-info btn-sm">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+
+            <!-- Content End -->
+        </div>
+    </div>
+</div>
+
+        <!-- Footer -->
+        <footer class="bg-light text-center text-lg-start mt-4">
+            <div class="container p-4">
+                <div class="row">
+                    <div class="col-lg-6 col-md-12 mb-4">
+                        <h5 class="text-uppercase">E-Ticaret</h5>
+                        <p>En iyi ürünleri en uygun fiyata sunuyoruz.</p>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <h5 class="text-uppercase">Bağlantılar</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url "index" %}" class="text-dark">Anasayfa</a></li>
+                            <li><a href="{% url "products_list" %}" class="text-dark">Ürünler</a></li>
+                            <li><a href="{% url "contactUs" %}" class="text-dark">İletişim</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <h5 class="text-uppercase">Bizi Takip Edin</h5>
+                        <a href="#" class="btn btn-primary btn-sm me-2">Facebook</a>
+                        <a href="#" class="btn btn-primary btn-sm">Instagram</a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center p-3 bg-dark text-white">
+                © 2024 Tüm Hakları Saklıdır.
+            </div>
+        </footer>
+
+<!-- Footer End -->
+    <!-- Modal -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProfileModalLabel">Profili Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <form method="POST" action="{% url "userauths:edit_profile" %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <!-- Profil Resmi -->
+                        <div class="mb-3">
+                            <label for="profileImage" class="form-label">Profil Resmi</label>
+                            <input type="file" class="form-control" id="profileImage" name="image">
+                        </div>
+                        <!-- İsim -->
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Ad Soyad</label>
+                            <input type="text" class="form-control" id="fullName" name="full_name"
+                                value="{{ profile.full_name }}">
+                        </div>
+                        <!-- Biyografi -->
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Biyografi</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ profile.bio }}</textarea>
+                        </div>
+                        <!-- Telefon -->
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Telefon</label>
+                            <input type="text" class="form-control" id="phone" name="phone" value="{{ profile.phone }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                    </div>
+                </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+<script>
+    let techDrop = document.getElementById('techDropdown')
+    let techDropdownList = document.getElementById('techDropdownList')
+    function dropdownOver(document) {
+        document.style.display = 'block'
+    }
+    function dropdownOut(document) {
+        document.style.display = 'none'
+    }
+</script>
+
+</html>
+{%endblock content%}
