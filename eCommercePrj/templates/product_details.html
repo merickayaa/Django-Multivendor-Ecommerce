@@ -74,13 +74,12 @@
 
                 {% comment %} <input type="number" value="1" id="product-quantity" class="mb-10 text-center p-0" style="width: 35px;"><br> {% endcomment %}
                 <!-- Sepete Ekle Butonu -->
-                <input type="hidden" value="{{product.price}}" id="current-product-price" class="current-product-price">
+                {% comment %} <input type="hidden" value="{{product.price}}" id="current-product-price" class="current-product-price"> {% endcomment %}
                 <input type="hidden" value="1" id="product-quantity" class="product-quantity">
                 <input type="hidden" value="{{product.pid}}" class="product-pid">
-                <input type="hidden" value="{{product.image}}" class="product-image">
-                <input type="hidden" value="{{product.id}}" class="product-id">
+                {% comment %} <input type="hidden" value="{{product.image}}" class="product-image">
                 <input type="hidden" value="{{product.title}}" class="product-title">
-                <input type="hidden" value="{{ product.vendor }}" class="product-vendor" />
+                <input type="hidden" value="{{ product.vendor }}" class="product-vendor" /> {% endcomment %}
                 <button class="btn btn-primary btn-lg mt-3 id add-to-cart-btn" id="add-to-cart-btn-detail"  data-index="{{product.id}}">
                     <i class="bi bi-cart-fill"></i> Sepete Ekle
                 </button>

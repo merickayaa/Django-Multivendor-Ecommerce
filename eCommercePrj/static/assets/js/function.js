@@ -69,7 +69,6 @@ $(document).on("click", "#add-to-cart-btn-detail", function () {
         url: '/add-to-cart/',
         type: 'POST',
         data: {
-            'id':product_id,
             'pid':product_pid,
             'image': product_image,
             'qty':quantity,
@@ -86,6 +85,9 @@ $(document).on("click", "#add-to-cart-btn-detail", function () {
             this_val.html("✓")
             console.log("Added Product to Cart")
             $(".cart-items-count").text(response.totalcartitems)
+        },error: function(response){
+            console.log(response)
+            console.log("Not Added Product to Cart")
         }
     })
 });
@@ -179,30 +181,49 @@ $(document).on("click", ".increase-btn-detail, .decrease-btn-detail", function (
 
     // Sepete eklemek için Butona Tıklama
     $(document).on("click", "#add-to-cart-btn-detail", function () {
+        let this_val = $(this)
+        let parentCard = this_val.closest(".wrapped");
+        let quantity = parentCard.find(".product-quantity").val();
+        let product_title = parentCard.find(".product-title").val();
+        let product_id = parentCard.find(".product-id").val();
+        let product_price = parentCard.find(".current-product-price").val();
+        let product_pid = parentCard.find(".product-pid").val();
+        let product_image = parentCard.find(".product-image").val();
+        let product_vendor = parentCard.find(".product-vendor").val();
+        console.log("Quantity:", quantity);
+        console.log("parentCard:", parentCard);
+        console.log("Title:", product_title);
+        console.log("Price:", product_price);
+        console.log("ID:", product_id);
+        console.log("PID:", product_pid);
+        console.log("IMG:", product_image);
+        console.log("Vendor:", product_vendor);
+        console.log("this_val:", this_val);
+
+        console.log("Current Element:", this_val);
         $.ajax({
             url: '/add-to-cart/',
             type: 'POST',
             data: {
-                'pid': productId,
-                'qty': newQty,
-                'title': productTitle,
-                'price': productPrice,
-                'image': productImage,
-                'vendor': productVendor
+                'id':product_id,
+                'pid':product_pid,
+                'image': product_image,
+                'qty':quantity,
+                'title': product_title,
+                'price': product_price,
+                'vendor': product_vendor
             },
-            dataType: 'json',
-            success: function(response) {
-                if (response.redirect_url) {
-                    window.location.href = response.redirect_url; // Yönlendirme yap
-                } else {
-                    console.log("Product added to cart:", response);
-                    $(".cart-items-count").text(response.totalcartitems); // Sepet öğe sayısını güncelle
-                }
+            dataType:'json',
+            beforeSend:function(){
+                console.log("Adding Product to Cart")
             },
-            error: function(xhr) {
-                console.error("Error adding product to cart:", xhr.responseText);
+            success: function(response){
+                console.log(response);
+                this_val.html("✓")
+                console.log("Added Product to Cart")
+                $(".cart-items-count").text(response.totalcartitems)
             }
-        });
+        })
     });
 });
 
@@ -240,6 +261,7 @@ $(document).on("click", ".make-default-address", function(){
     })
 
 });
+$(document).on("click", ".")
 
 $(document).on("click", ".delete-address", function(){
     let id = $(this).attr("data-address-id")

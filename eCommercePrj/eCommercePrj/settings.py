@@ -25,13 +25,14 @@ SECRET_KEY = 'django-insecure-g+xwin)9)rfpb#rpe1-p-mtq*5s2l0l49yg+9k1@w84=$qc1e&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["1a42-85-104-69-218.ngrok-free.app","127.0.0.1"]
-CSRF_TRUSTED_ORIGINS = ["https://1a42-85-104-69-218.ngrok-free.app"]
+ALLOWED_HOSTS = ["4fc3-2a00-1d37-1c29-400-6c1b-2260-e173-53a2.ngrok-free.app","127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["https://4fc3-2a00-1d37-1c29-400-6c1b-2260-e173-53a2.ngrok-free.app"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'django_ngrok',
     'django.contrib.humanize',
     'reportlab',
     'paypal.standard.ipn',
@@ -168,5 +169,5 @@ AUTH_USER_MODEL = "userauths.User"
 CKEDITOR_UPLOAD_PATH = "uploads/"
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Oturumları veritabanında saklar
 
-PAYPAL_RECEIVER_EMAIL = 'merickay0@yandex.com'
+PAYPAL_RECEIVER_EMAIL = 'sb-7u1ao34805248@business.example.com'
 PAYPAL_TEST = True

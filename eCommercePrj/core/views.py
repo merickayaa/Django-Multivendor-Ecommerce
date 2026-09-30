@@ -24,7 +24,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import check_password
 from paypal.standard.models import ST_PP_COMPLETED
 from paypal.standard.ipn.models import PayPalIPN
-
+from paypal.standard.ipn.signals import valid_ipn_received
 
 def baseView(view_func):
     def wrapper(request, *args, **kwargs):
@@ -160,7 +160,7 @@ def vendor_products_list_view(request,vid):
 
 def product_detail_view(request,pid):
     product = Product.objects.get(pid=pid)
-    p_images = product.p_images.all()
+    p_images = product.product_images.all()
     related_products = Product.objects.filter(category=product.category, product_status="published").exclude(title=product.title)
     reviews = ProductReview.objects.filter(product=product).order_by('-date')
     average_rating = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
@@ -269,24 +269,20 @@ def filter_view(request):
 @login_required
 def add_to_cart(request):
     if request.method == "POST":
-        product_id = request.POST.get('id')
         product_pid = request.POST.get('pid')
-        image = request.POST.get('image')
+        print("pid", product_pid)
+        # image = request.POST.get('image')
         quantity = int(request.POST.get('qty', 1))  # Default miktar 1
-        title = request.POST.get('title')
-        price = float(request.POST.get('price'))
-        vendor = request.POST.get('vendor')
+        # title = request.POST.get('title')
+        # price = float(request.POST.get('price'))
+        # vendor = request.POST.get('vendor')
 
         # Kullanıcının sepetinde aynı ürün var mı kontrol et
         cart_item, created = Cart.objects.get_or_create(
             user=request.user,
-            product_id=product_pid,
+            product=Product.objects.get(pid=product_pid),
             defaults={
-                'title': title,
                 'quantity': quantity,
-                'price': price,
-                'image': image,
-                'vendor': vendor,
             }
         )
 
@@ -308,13 +304,13 @@ def add_to_cart(request):
 def calculate_cart_totals(user):
     """Helper function to calculate total cart amount and item count."""
     cart_items = Cart.objects.filter(user=user)
-    cart_total_amount = float(sum(item.quantity * item.price for item in cart_items))  # Float dönüşümü eklendi
+    cart_total_amount = float(sum(item.quantity * item.product.price for item in cart_items))  # Float dönüşümü eklendi
     cart_data = {
-        item.product_id: {
-            'title': item.title,
-            'price': float(item.price),
+        item.product.pid: {
+            'title': item.product.title,
+            'price': float(item.product.price),
             'qty': item.quantity,
-            'total_price': float(item.quantity * item.price)
+            'total_price': float(item.quantity * item.product.price)
         } for item in cart_items
     }
     return cart_items.count(), cart_total_amount, cart_data
@@ -326,7 +322,7 @@ def update_cart_item(request):
         new_qty = int(request.POST.get('qty', 0))
 
         # Retrieve the cart item
-        cart_item = get_object_or_404(Cart, user=request.user, product_id=product_id)
+        cart_item = get_object_or_404(Cart, user=request.user, product__pid=product_id)
 
         if new_qty > 0:
             # Update the quantity
@@ -357,13 +353,13 @@ def cart_view(request):
 
     cart_data = [
         {
-            "pid": item.product_id,
-            "title": item.title,
+            "pid": item.product.pid,
+            "title": item.product.title,
             "quantity": item.quantity,
-            "price": item.price,
-            "image": item.image.url if hasattr(item.image, 'url') else item.image,
-            "vendor": item.vendor,
-            "total_price": item.price * item.quantity
+            "price": item.product.price,
+            "image": item.product.image if hasattr(item.product.image, 'url') else item.product.image,
+            "vendor": item.product.vendor,
+            "total_price": item.product.price * item.quantity
         }
         for item in cart_items
     ]
@@ -406,55 +402,68 @@ def checkout_view(request):
     vendors = []
     for item in cart_items:
         try:
-            vendor = Vendor.objects.get(title=item.vendor)
+            vendor = Vendor.objects.get(title=item.product.vendor)
         except Vendor.DoesNotExist:
-            messages.error(request, f"{item.vendor} adlı satıcı bulunamadı.")
+            messages.error(request, f"{item.product.vendor} adlı satıcı bulunamadı.")
             return redirect('cart')
         if vendor not in vendors:
             vendors.append(vendor)
-        item_total_price = item.quantity * item.price
+        item_total_price = item.quantity * item.product.price
         cart_total_amount += item_total_price
         # Sepet verilerini doldur
-        cart_data[item.product_id] = {
-            'title': item.title,
-            'price': item.price,
+        cart_data[item.product.pid] = {
+            'title': item.product.title,
+            'price': item.product.price,
             'qty': item.quantity,
             'total_price': item_total_price,
-            'image': item.image if isinstance(item.image, str) else None,
+            'image': item.product.image if hasattr(item.product.image, 'url') else item.product.image,
             'vendor': vendor.title,
         }
         CartOrderItems.objects.create(
             order=order,
-            invoice_no=order.id,
-            item=item.title,
-            image=item.image,
+            item=item.product.title,
+            image=item.product.image,
             quantity=item.quantity,
-            price=item.price,
+            price=item.product.price,
             total=item_total_price,
             vendor=vendor
         )
 
     order.price = cart_total_amount
+    order.invoice_no=order.oid
     order.save()
 
-    # PayPal ödeme ayarları
+
     host = request.get_host()
     paypal_dict = {
-        'business': settings.PAYPAL_RECEIVER_EMAIL,
-        'amount': cart_total_amount,
-        'item_name': f"Order-{order.oid}",
-        'invoice': order.oid,
-        'currency_code': "USD",
-        'notify_url': f"http://{host}{reverse('paypal-ipn')}",
-        'return_url': f"http://{host}{reverse('payment_waiting')}?invoice={order.oid}",
-        'cancel_url': f"http://{host}{reverse('payment_failed')}?invoice={order.oid}",
+        "business": settings.PAYPAL_RECEIVER_EMAIL,
+        "amount": cart_total_amount,
+        "item_name": f"Order-{order.oid}",
+        "invoice": order.invoice_no,
+        "notify_url": f"http://{host}{reverse('paypal-ipn')}",
+        "return": f"http://{host}{reverse('payment_waiting')}?invoice={order.oid}",
+        "cancel_return": f"http://{host}{reverse('payment_failed')}?invoice={order.oid}",
+        "custom": "premium_plan",  # Custom command to correlate to some function later (optional)
     }
-    paypal_payment_button = PayPalPaymentsForm(initial=paypal_dict)
+    form = PayPalPaymentsForm(initial=paypal_dict)
+    # # PayPal ödeme ayarları
+    # host = request.get_host()
+    # paypal_dict = {
+    #     'business': settings.PAYPAL_RECEIVER_EMAIL,
+    #     'amount': cart_total_amount,
+    #     'item_name': f"Order-{order.oid}",
+    #     'invoice': order.oid,
+    #     'currency_code': "USD",
+    #     'notify_url': f"http://{host}{reverse('paypal-ipn')}",
+    #     'return_url': f"http://{host}{reverse('payment_waiting')}?invoice={order.oid}",
+    #     'cancel_url': f"http://{host}{reverse('payment_failed')}?invoice={order.oid}",
+    # }
+    # paypal_payment_button = PayPalPaymentsForm(initial=paypal_dict)
 
     return render(request, 'checkout.html', {
         "cart_data":cart_data,
         "cart_total_amount": cart_total_amount,
-        "paypal_payment_button": paypal_payment_button,
+        "form":form,
         "order": order,
         "active_address":active_address,
         "MEDIA_URL": settings.MEDIA_URL,
@@ -462,47 +471,33 @@ def checkout_view(request):
     })
 
 
-
+def paypal_payment_received(sender, **kwargs):
+    ipn = sender
+    if ipn.payment_status != ST_PP_COMPLETED:
+            return
+    
+    if ipn.receiver_email != settings.PAYPAL_RECEIVER_EMAIL:
+        return
+    order = CartOrder.objects.filter(oid=ipn.invoice).first()
+    cart = Cart.objects.get(user=order.user)
+    if ipn.mc_gross == order.price and ipn.mc_currency == "USD":
+        order.paid_status = True
+        order.save()
+        cart.delete()
+valid_ipn_received.connect(paypal_payment_received)
         
 @login_required
 def payment_completed_view(request):
     invoice = request.GET.get('invoice')
-    if not invoice:
-        messages.error(request, "Geçersiz fatura numarası.")
-        return redirect("cart")
-
     try:
-        order = CartOrder.objects.get(oid=invoice)
+        order = get_object_or_404(CartOrder, oid=invoice, user=request.user)
     except CartOrder.DoesNotExist:
         messages.error(request, "Sipariş bulunamadı.")
         return redirect("cart")
+    if not order.paid_status:
+        return redirect(f"{reverse('payment_waiting')}?invoice={order.oid}")
+    return render(request, "payment-completed.html", {"order": order})
 
-    # IPN doğrulama
-    ipn_obj = PayPalIPN.objects.filter(invoice=invoice).last()
-    if ipn_obj and ipn_obj.payment_status.lower() == "completed":
-        order.paid_status = True
-        order.save()
-        carts = Cart.objects.filter(user=request.user)
-        print(carts)
-        products = Product.objects.filter(pid__in=[cart.product_id for cart in carts])
-
-        with transaction.atomic():
-            for cart in carts:
-                product = Product.objects.get(pid=cart.product_id)
-                print(cart.quantity)
-                if int(product.stock_count) >= cart.quantity:
-                    new_count = int(product.stock_count) - cart.quantity
-                    product.stock_count = str(new_count)
-                    product.save()
-                else:
-                    messages.error(request, f"'{product.title}' için yeterli stok yok.")
-                    return redirect('cart')
-
-        carts.delete()  # Sepeti temizle
-        messages.success(request, "Ödeme başarıyla tamamlandı!")
-        return render(request, 'payment-completed.html', {"order": order})
-    messages.error(request, "Ödeme doğrulaması başarısız.")
-    return redirect("payment_failed")
 
         
 @login_required
