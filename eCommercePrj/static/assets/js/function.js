@@ -261,7 +261,6 @@ $(document).on("click", ".make-default-address", function(){
     })
 
 });
-$(document).on("click", ".")
 
 $(document).on("click", ".delete-address", function(){
     let id = $(this).attr("data-address-id")
@@ -289,14 +288,18 @@ $(document).on("click", ".delete-address", function(){
 $(document).on("click", ".add-to-wishlist", function (){
     let product_id = $(this).attr("data-product-item")
     let this_val = $(this)
-
+    let parentSpan = this_val.closest("span")
+    let average_rating = parentSpan.find(".product-rating").val()
     console.log("product_id: ",product_id)
     console.log("this_val: ",this_val)
 
     $.ajax({
         url: "/add-to-wishlist/",
         type:"POST",
-        data: { "id": product_id },
+        data: { 
+            "id": product_id,
+            "average_rating": average_rating
+         },
         dataType: "json",
         beforeSend: function () {
             this_val.html("❤︎");

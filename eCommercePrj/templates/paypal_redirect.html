@@ -1,0 +1,11 @@
+{% extends "partials/base.html" %}
+{% block content %}
+<div class="container text-center my-5">
+    <p>PayPal'a yönlendiriliyorsunuz...</p>
+    <div id="paypal-form">{{ form.render }}</div>
+</div>
+<script>
+    // PayPal formunu kullanıcı tıklamadan otomatik gönder
+    document.querySelector("#paypal-form form").submit();
+</script>
+{% endblock %}

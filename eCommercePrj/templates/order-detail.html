@@ -3,6 +3,7 @@
 {% load static %}
 
 {%block content %}
+<p>{% for message in messages %}{{message}}{% endfor %}</p>
 {% comment %} <meta name="csrf-token" content="{{ csrf_token }}"> {% endcomment %}
 
             <!-- İçerik -->
@@ -29,12 +30,17 @@
                                                     <p class="card-text text-secondary">
                                                         <span class="mx-2 fw-bold quantity">Quantity: {{p.quantity}}</span>
                                                     </p>
-                                                    <p class="card-text fw-bold fs-5 price"><span>Fiyat: </span>₺{{p.price|floatformat:2}}</p>
+                                                    <p class="card-text fw-bold fs-5 price"><span>Fiyat: </span>₺{{p.total|floatformat:2}}</p>
                                                 </div>
                                                 {% if order.product_status == "delivered" %}
+                                                {% if p.user_review %}
+                                                <p class="text-success">Bu ürünü değerlendirdiniz: {{ p.user_review.rating }} ★</p>
+                                                <p class="text-muted">"{{ p.user_review.review }}"</p>
+                                                {% else %}
                                                 <button type="button" class="btn btn-primary w-25" data-bs-toggle="modal" data-bs-target="#reviewModal{{p.id}}">
                                                     Urunu Degerlendir
-                                                </button>
+                                                </button>                                                
+                                                {% endif %}
                                                 {% else %}
                                                 <h3>Urunu Degerlendirmek Icin Teslim Almalisiniz</h3>
                                                 {% endif %}

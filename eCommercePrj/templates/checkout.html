@@ -189,14 +189,18 @@
             <div class="col-md-3">
                 <div class="card shadow-sm rounded border-0 no-hover" style="max-width: 18rem;">
                     <div class="card-header bg-white card text-dark border-0">
-                        <h6 class="mb-0">Selected Products<span
-                                class="badge bg-primary rounded-pill float-end">{{totalcartitems}}</span>
+                        <h6 class="mb-0">Selected Products
+                            {% for item in cart_items %}
+                            <span class="badge bg-primary rounded-pill float-end">{{item.product.title}}</span>
+                            {% endfor %}
                         </h6>
                     </div>
                     <div class="card-body text-center">
                         <h5 class="card-title text-success fw-bold mb-3">{{cart_total_amount}} $</h5>
-                        {% comment %} {{paypal_payment_button.render}} {% endcomment %}
-                        {{form.render}}
+                        <form method="POST" action="{% url 'create_order' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary w-100">PayPal ile Öde</button>
+                        </form>
                     </div>
                     <div class="card-footer">
                         <span class="float-end" data-bs-toggle="collapse" data-bs-target="#cartDetails"

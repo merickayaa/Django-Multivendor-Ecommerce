@@ -380,45 +380,18 @@ def cart_view(request):
     return render(request, 'cart.html', context)
 
 @login_required
-def checkout_view(request):
-    cart_data = {}
-    try:
-        active_address = Address.objects.get(user=request.user, status=True)
-    except Address.DoesNotExist:
-        messages.warning(request, "Aktif bir adresiniz bulunmuyor. Lütfen bir adres ekleyin.")
-        return redirect("cart")
-    except Address.MultipleObjectsReturned:
-        messages.warning(request, "Birden fazla aktif adresiniz var. Lütfen birini seçin.")
-        return redirect("addresses")
-
-    cart_items = Cart.objects.filter(user=request.user)
-    if not cart_items.exists():
-        messages.warning(request, "Sepetiniz boş. Devam etmeden önce ürün ekleyin.")
-        return redirect('cart')
-    order = CartOrder.objects.create(user=request.user, price=0)
-
+def create_order_view(request):
+    if request.method != "POST":
+        return redirect("checkout")
+    cart_items = Cart.objects.filter(user=request.user).select_related("product__vendor")
     # Sipariş oluşturma
     cart_total_amount = 0
-    vendors = []
+    # if request.method == 'post':
+    #     with transaction.atomic():
+    order = CartOrder.objects.create(user=request.user, price=0)
     for item in cart_items:
-        try:
-            vendor = Vendor.objects.get(title=item.product.vendor)
-        except Vendor.DoesNotExist:
-            messages.error(request, f"{item.product.vendor} adlı satıcı bulunamadı.")
-            return redirect('cart')
-        if vendor not in vendors:
-            vendors.append(vendor)
         item_total_price = item.quantity * item.product.price
         cart_total_amount += item_total_price
-        # Sepet verilerini doldur
-        cart_data[item.product.pid] = {
-            'title': item.product.title,
-            'price': item.product.price,
-            'qty': item.quantity,
-            'total_price': item_total_price,
-            'image': item.product.image if hasattr(item.product.image, 'url') else item.product.image,
-            'vendor': vendor.title,
-        }
         CartOrderItems.objects.create(
             order=order,
             item=item.product.title,
@@ -426,7 +399,7 @@ def checkout_view(request):
             quantity=item.quantity,
             price=item.product.price,
             total=item_total_price,
-            vendor=vendor
+            vendor=item.product.vendor
         )
 
     order.price = cart_total_amount
@@ -446,6 +419,43 @@ def checkout_view(request):
         "custom": "premium_plan",  # Custom command to correlate to some function later (optional)
     }
     form = PayPalPaymentsForm(initial=paypal_dict)
+    return render(request, "paypal_redirect.html", {"form": form})
+
+
+@login_required
+def checkout_view(request):
+    cart_total_amount = 0
+    try:
+        active_address = Address.objects.get(user=request.user, status=True)
+    except Address.DoesNotExist:
+        messages.warning(request, "Aktif bir adresiniz bulunmuyor. Lütfen bir adres ekleyin.")
+        return redirect("cart")
+    except Address.MultipleObjectsReturned:
+        messages.warning(request, "Birden fazla aktif adresiniz var. Lütfen birini seçin.")
+        return redirect("addresses")
+
+    cart_items = Cart.objects.filter(user=request.user)
+    if not cart_items.exists():
+        messages.warning(request, "Sepetiniz boş. Devam etmeden önce ürün ekleyin.")
+        return redirect('cart')
+    cart_data = {}
+    totalcartitems = {}
+    for item in cart_items:
+        try:
+            vendor = Vendor.objects.get(title=item.product.vendor)
+        except Vendor.DoesNotExist:
+            messages.error(request, f"{item.product.vendor} adlı satıcı bulunamadı.")
+            return redirect('cart')
+        item_total_price = item.quantity * item.product.price
+        cart_total_amount += item_total_price
+        cart_data[item.product.pid] = {
+            'title': item.product.title,
+            'price': item.product.price,
+            'qty': item.quantity,
+            'total_price': item_total_price,
+            'image': item.product.image if hasattr(item.product.image, 'url') else item.product.image,
+            'vendor':vendor
+        }
     # # PayPal ödeme ayarları
     # host = request.get_host()
     # paypal_dict = {
@@ -462,12 +472,13 @@ def checkout_view(request):
 
     return render(request, 'checkout.html', {
         "cart_data":cart_data,
+        "cart_items":cart_items,
         "cart_total_amount": cart_total_amount,
-        "form":form,
-        "order": order,
+        # "form":form,
+        # "order": order,
         "active_address":active_address,
         "MEDIA_URL": settings.MEDIA_URL,
-        "vendors":vendors,
+        # "vendors":vendors,
     })
 
 
@@ -537,17 +548,17 @@ def customer_dashboard(request):
     return render(request, 'dashboard.html', context)
 
 @login_required
-def order_detail(request,id):
-    order = CartOrder.objects.get(user=request.user, oid=id)
-    print(order.product_status)
+def order_detail(request, oid):
+    order = CartOrder.objects.get(user=request.user, oid=oid)
     products = CartOrderItems.objects.filter(order=order)
-    for p in products:
-        invoice_no = p.invoice_no
-    print("invoice", invoice_no)
+    for product in products:
+        product.user_review = ProductReview.objects.filter(user=request.user, product__title=product.item, product__vendor=product.vendor).first()
+        print(product)
+    invoice_no = order.invoice_no
     context={
         'order': order,
         'products': products,
-        'invoice_no':invoice_no
+        'invoice_no':invoice_no,
     }
     return render(request, 'order-detail.html', context)
 
@@ -565,16 +576,19 @@ def make_review(request):
         except:
             print("olmadi")
             messages.error(request, "Ürün bulunamadı.")
-            return redirect("order_detail", id=request.POST.get("order_id"))  # Replace with correct URL
+            return redirect("order_detail", oid=request.POST.get("order_id"))  # Replace with correct URL
         
         # Create the review
-        ProductReview.objects.create(user=user, product=product, review=review, rating=rating)
-        
-        # Success message
-        messages.success(request, "Değerlendirme başarıyla gönderilmiştir.")
+        try:
+            product_review = ProductReview.objects.get(user=user, product=product)
+            messages.error(request, "Ürüne zaten yorum yapılmış.")
+        except:
+            ProductReview.objects.create(user=user, product=product, review=review, rating=rating)
+            # Success message
+            messages.success(request, "Değerlendirme başarıyla gönderilmiştir.")
         
         # Redirect to the order detail page (adjust the URL name if necessary)
-        return redirect("order_detail", id=request.POST.get("order_id"))  # Replace with correct URL
+        return redirect("order_detail", oid=request.POST.get("order_id"))  # Replace with correct URL
     else:
         # If the request is not POST, redirect or handle differently
         return redirect("home")  # Replace with appropriate fallback
@@ -617,6 +631,8 @@ def add_to_wishlist(request):
     
     try:
         product = Product.objects.get(id=id)
+        average_rating = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
+        average_rating = average_rating['rating'] or 0.0
     except Product.DoesNotExist:
         return JsonResponse({"bool": False, "error": "Product not found"}, status=404)
     
@@ -624,7 +640,7 @@ def add_to_wishlist(request):
     if wishlist_count > 0:
         context = {"bool": True}
     else:
-        Wishlist.objects.create(user=request.user, product=product)
+        Wishlist.objects.create(user=request.user, product=product, rating=average_rating)
         context = {"bool": True}
     
     return JsonResponse(context)
