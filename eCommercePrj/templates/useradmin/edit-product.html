@@ -37,11 +37,11 @@
     
             <!-- Ürün Fiyatı -->
             <h2 class="text-primary fw-bold">
-                ₺ <span class="current-product-price-{{product.id}}">{{ product.price }}</span>
+                $ <span class="current-product-price-{{product.id}}">{{ product.price }}</span>
             </h2>
             {% comment %} {% if product.old_price > product.price %}
             <h3 class="text-muted text-decoration-line-through" style="font-size: 1rem;">
-                ₺{{ product.old_price }}
+                ${{ product.old_price }}
             </h3>
             {% endif %} {% endcomment %}
     
@@ -62,14 +62,14 @@
                     <strong>Stok Kodu:</strong>
                     {{product.sku}}
                 </li>
-                {% comment %} {% if product.tags.all %}
+                {% if product.tags.all %}
                 <li class="list-group-item border-0 px-0">
                     <strong>Etiketler:</strong>
                     {% for tag in product.tags.all %}
                     <a class="badge bg-secondary text-white text-decoration-none me-1" href="{% url "tags" tag.slug %}">#{{tag.name}}</a>
                     {% endfor %}
                 </li>
-                {% endif %} {% endcomment %}
+                {% endif %}
 
             </ul>
         </div>
@@ -105,7 +105,7 @@
             <label for="id_price" class="form-label">Fiyat</label>
             {{ form.price }}
         </div>
-        <div class="mb-3">
+        {% comment %} <div class="mb-3">
             <label for="id_old_price" class="form-label">Eski Fiyat</label>
             {{ form.old_price }}
         </div>
@@ -116,7 +116,7 @@
         <div class="mb-3">
             <label for="id_mfd" class="form-label">Üretim Tarihi</label>
             {{ form.mfd }}
-        </div>
+        </div> {% endcomment %}
         <div class="mb-3">
             <label for="id_tags" class="form-label">Etiketler</label>
             {{ form.tags }}

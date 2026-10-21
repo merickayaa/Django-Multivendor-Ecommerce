@@ -42,8 +42,8 @@
                                         <span class="mx-2 fw-bold quantity">{{ item.quantity }}</span>
                                         <button class="btn btn-outline-success btn-sm border-0 increase-btn"><i class="fa-solid fa-plus"></i></button>
                                     </p>
-                                    <p class="card-text fw-bold fs-5 price"><span>Birim Fiyat: </span>₺{{ item.price|floatformat:2 }}</p>
-                                    <p class="card-text fw-bold fs-5 product-total"><span>Toplam Tutar: </span>₺{{ item.total_price|floatformat:2 }}</p>
+                                    <p class="card-text fw-bold fs-5 price"><span>Birim Fiyat: </span>${{ item.price|floatformat:2 }}</p>
+                                    <p class="card-text fw-bold fs-5 product-total"><span>Toplam Tutar: </span>${{ item.total_price|floatformat:2 }}</p>
                                 </div>
                                 <input type="hidden" value="{{item.pid}}" class="product-pid">
                             </div>
@@ -62,7 +62,7 @@
                         <h6 class="mb-0">Seçilen Ürünler <span class="badge bg-primary rounded-pill cart-items-count">{{ totalcartitems }}</span></h6>
                     </div>
                     <div class="card-body text-center">
-                        <h5 class="card-title text-success fw-bold mb-3 cart-total-amount" id="total-price">₺{{ cart_total_amount|floatformat:2 }}</h5>
+                        <h5 class="card-title text-success fw-bold mb-3 cart-total-amount" id="total-price">${{ cart_total_amount|floatformat:2 }}</h5>
                         <a href="{% url "checkout" %}" class="btn btn-primary w-100 fw-bold">Alışverişi Tamamla</a>
                     </div>
                     <div class="card-footer">
@@ -77,8 +77,8 @@
                             <ul class="list-group border-0">
                             {% for item in cart_data %}
                                 <li class="list-group-item d-flex bg-light justify-content-between align-items-center border-0 p-0 product-item" id="product-{{ item.pid }}">
-                                    <small>{{ item.title }} (<span class="quantity">{{ item.quantity }}</span> x ₺{{ item.price|floatformat:2 }})</small>
-                                    <small class="product-total">₺{{ item.total_price|floatformat:2 }}</small>
+                                    <small>{{ item.title }} (<span class="quantity">{{ item.quantity }}</span> x ${{ item.price|floatformat:2 }})</small>
+                                    <small class="product-total">${{ item.total_price|floatformat:2 }}</small>
                                 </li>
                                 <hr class="p-0 m-0">
                             {% endfor %}

@@ -9,11 +9,30 @@
     <h1>Ödeme İşleniyor</h1>
     <p>Lütfen ödemenizin doğrulanmasını bekleyin. Bu işlem birkaç saniye sürebilir.</p>
     <p>Fatura Numarası: {{ invoice }}</p>
+    <p id="status"></p>
     <script>
         // Doğrulama tamamlandığında kullanıcıyı otomatik yönlendirin
-        setTimeout(() => {
+        {% comment %} setTimeout(() => {
             window.location.href = "{% url 'payment_completed' %}?invoice={{ invoice }}";
-        }, 15000); // 10 saniye bekle
+        }, 15000); // 10 saniye bekle {% endcomment %}
+        let i = 0 
+        let maxTry = 40
+        function payment_state(){
+            fetch("{% url 'payment_status' invoice %}")
+            .then(r => r.json())
+            .then(data => {
+                if (data.state === "paid"){
+                    window.location.href = "{% url 'payment_completed' %}?invoice={{ invoice }}"
+                } else if (data.state === "failed"){
+                    window.location.href = "{% url 'payment_failed' %}?invoice={{ invoice }}"
+                } else if (++i < maxTry){
+                    setTimeout(payment_state, 3000)
+                } else {
+                document.getElementById("status").textContent = "Ödemeniz henüz onaylanmadı. Siparişlerim sayfasından takip edebilirsiniz."
+            }
+            })
+        }
+        payment_state()
     </script>
 </body>
 </html>

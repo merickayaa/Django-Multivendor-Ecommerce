@@ -81,10 +81,10 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        {% for vendor in vendors %}
-                                            <p>Ünvanı: <strong>{{ vendor.title }}</strong></p>
-                                            <p>Adresi: <strong>{{ vendor.address }}</strong></p>
-                                            <p>Telefon: <strong>{{ vendor.contact }}</strong></p>
+                                        {% for item in cart_items %}
+                                            <p>Ünvanı: <strong>{{ item.product.vendor }}</strong></p>
+                                            <p>Adresi: <strong>{{ item.product.vendor.address }}</strong></p>
+                                            <p>Telefon: <strong>{{ item.product.vendor.contact }}</strong></p>
                                             <hr>
                                         {% endfor %}
                                     </td>
@@ -115,7 +115,7 @@
                                                 <tr>
                                                     <td>{{ item.title }}</td>
                                                     <td>{{ item.qty }}</td>
-                                                    <td>{{ item.price|floatformat:2 }} TL</td>
+                                                    <td>${{ item.price|floatformat:2 }}</td>
                                                     <td>Vadesiz</td>
                                                 </tr>
                                                 {% endfor %}
@@ -147,10 +147,10 @@
         <p>İşbu sözleşme, <strong>SATICI</strong> ve <strong>ALICI</strong> arasında düzenlenmektedir.</p>
         <p><strong>SATICI Bilgileri:</strong></p>
         <ul>
-            {% for vendor in vendors %}
-                <li>Ünvanı: {{ vendor.title }}</li>
-                <li>Adresi: {{ vendor.address }}</li>
-                <li>Telefon: {{ vendor.contact }}</li>
+            {% for item in cart_items %}
+                <li>Ünvanı: {{ item.product.vendor.title }}</li>
+                <li>Adresi: {{ item.product.vendor.address }}</li>
+                <li>Telefon: {{ item.product.vendor.contact }}</li>
                 <hr>
             {% endfor %}
         </ul>
@@ -171,7 +171,7 @@
                 <tr>
                     <td>{{ item.title }}</td>
                     <td>{{ item.qty }}</td>
-                    <td>{{ item.price|floatformat:2 }} TL</td>
+                    <td>${{ item.price|floatformat:2 }}</td>
                     <td>{{ payment_method }}</td>
                 </tr>
                 {% endfor %}
@@ -191,7 +191,9 @@
                     <div class="card-header bg-white card text-dark border-0">
                         <h6 class="mb-0">Selected Products
                             {% for item in cart_items %}
-                            <span class="badge bg-primary rounded-pill float-end">{{item.product.title}}</span>
+                            <ul class="p-0">
+                                <li class="badge bg-primary rounded-pill">{{item.product.title}}</li>
+                            </ul>
                             {% endfor %}
                         </h6>
                     </div>
@@ -215,8 +217,8 @@
                                 {% for p_id, item in cart_data.items %}
                                 <li class="list-group-item d-flex bg-light justify-content-between align-items-center border-0 p-0 product-item"
                                     id="{{ p_id }}">
-                                    <small>{{ item.title }} ({{ item.qty }} x ₺{{ item.price|floatformat:2 }})</small>
-                                    <small><span>₺{{ item.total_price }}</span></small>
+                                    <small>{{ item.title }} ({{ item.qty }} x ${{ item.price|floatformat:2 }})</small>
+                                    <small><span>${{ item.total_price }}</span></small>
                                 </li>
                                 <hr class="p-0 m-0">
                                 {% endfor %}

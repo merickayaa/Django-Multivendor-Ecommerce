@@ -1,10 +1,10 @@
-from django.shortcuts import render,redirect
-from core.models import CartOrder, Product, Category, CartOrderItems,Address,ProductReview, Brand,Vendor
+from django.shortcuts import render,redirect,get_object_or_404
+from core.models import STATUS_CHOICE, CartOrder, Product, Category, CartOrderItems,Address,ProductReview, Brand,Vendor
 from django.db.models import Sum,Avg
 from userauths.models import User,Profile
 import datetime
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from .forms import AddProductForm
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from useradmin.decorators import admin_required
+
 # Create your views here.
 
 from django.db.models import Sum
@@ -28,17 +29,17 @@ def dashboard(request):
         vendor = Vendor.objects.get(user=request.user)
     except Vendor.DoesNotExist:
         messages.error(request, "Mağaza bilgisi bulunamadı.")
-        return redirect("home")
+        return redirect("index")
 
     # Satıcıya ait toplam kazanç
     revenue = (
-        CartOrderItems.objects.filter(vendor=vendor)
+        CartOrderItems.objects.filter(vendor=vendor, order__paid_status=True)
         .aggregate(total=Sum("total"))["total"]
         or 0
     )
     print("revenue", revenue)
     # Satıcıya ait toplam sipariş sayısı
-    total_orders_count = CartOrderItems.objects.filter(vendor=vendor).count()
+    total_orders_count = CartOrder.objects.filter(cartorderitems__vendor=vendor, paid_status=True).distinct().count()
     print("total_orders_count", total_orders_count)
 
     # Satıcıya ait ürünler
@@ -46,9 +47,9 @@ def dashboard(request):
     print("products", products)
 
     # Aylık kazanç
-    this_month = now().month
+    today = now()
     monthly_revenue = (
-        CartOrderItems.objects.filter(vendor=vendor, order__order_date__month=this_month)
+        CartOrderItems.objects.filter(vendor=vendor, order__paid_status=True, order__order_date__month=today.month, order__order_date__year=today.year)
         .aggregate(monthly_total=Sum("total"))["monthly_total"]
         or 0
     )
@@ -56,12 +57,10 @@ def dashboard(request):
 
     # Satıcıya ait son siparişler
     latest_orders = (
-        CartOrderItems.objects.filter(vendor=vendor)
-        .select_related("order")
-        .order_by("-order__order_date")[:10]
+        CartOrder.objects.filter(cartorderitems__vendor=vendor, paid_status=True)
+        .distinct()
+        .order_by("-order_date")[:10]
     )
-    for order in latest_orders:
-        print("order", order.order.user)
 
     context = {
         "vendor": vendor,
@@ -160,7 +159,7 @@ def get_brands_by_category(request, category_id):
 
 @admin_required
 def edit_product(request,pid):
-    product = Product.objects.get(pid=pid)
+    product = get_object_or_404(Product, pid=pid, vendor__user=request.user)
     if request.method == 'POST':
         form = AddProductForm(request.POST,request.FILES,instance=product)
         if form.is_valid():
@@ -179,21 +178,20 @@ def edit_product(request,pid):
 
 @admin_required
 def delete_product(request,pid):
-    product = Product.objects.get(pid=pid)
-    product.delete()
+    if request.method == "POST":
+        product = get_object_or_404(Product, pid=pid, vendor__user=request.user)
+        product.delete()
     return redirect("useradmin:products")
  
 @admin_required
 def orders(request):
     # Satıcıya ait siparişleri filtreliyoruz
-    try:
-        vendor = Vendor.objects.get(user=request.user)
-    except Vendor.DoesNotExist:
-        vendor = None  # Eğer kullanıcıya ait vendor yoksa
+    vendor = get_object_or_404(Vendor, user=request.user)
 
     # Eğer satıcı varsa, ona ait siparişleri filtreliyoruz
     if vendor:
-        orders = CartOrder.objects.filter(cartorderitems__vendor=vendor).distinct()
+        orders = CartOrderItems.objects.filter(vendor=vendor).select_related("order").distinct()
+        # orders = CartOrder.objects.filter(cartorderitems__vendor=vendor).distinct()
     else:
         orders = CartOrder.objects.none()  # Satıcı yoksa hiç sipariş göstermiyoruz
 
@@ -204,24 +202,28 @@ def orders(request):
     return render(request, "useradmin/orders.html", context)
 @admin_required
 def order_detail(request,id):
-    order = CartOrder.objects.get(id=id)
-    address = Address.objects.get(user=order.user, status=True)
-    order_items = CartOrderItems.objects.filter(order=order)
+    vendor = get_object_or_404(Vendor, user=request.user)
+    order = get_object_or_404(CartOrder, id=id)
+    order_items = CartOrderItems.objects.filter(order=order, vendor=vendor)
+    if not order_items.exists():
+        raise Http404
     context={
         "order_items":order_items,
         "order":order,
-        "address":address,
+        "order_first_item": order_items.first(),
     }
     return render(request, "useradmin/order_detail.html", context)
 
-@csrf_exempt
+@admin_required
 def change_order_status(request,oid):
-    order = CartOrder.objects.get(oid=oid)
+    order = get_object_or_404(CartOrder, oid=oid)
+    vendor = get_object_or_404(Vendor, user=request.user)
+    order_items = CartOrderItems.objects.filter(order=order, vendor=vendor)
     if request.method == "POST":
         status = request.POST.get("status")
-        order.product_status = status
-        order.save()
-        messages.success(request, "Order Status Changed To {status}")
+        if status in STATUS_CHOICE:
+            order_items.update(product_status=status)
+            messages.success(request, f"Order Status Changed To {status}")
     return redirect("useradmin:order_detail", order.id)
 
 @admin_required
@@ -234,7 +236,7 @@ def shop_page(request):
     # Satıcı varsa, ürünleri filtreliyoruz
     if vendor:
         products = Product.objects.filter(vendor=vendor)  # Satıcıya ait ürünleri alıyoruz
-        revenue = CartOrderItems.objects.filter(vendor=vendor, order__paid_status=True).aggregate(price=Sum("price"))  # Satıcıya ait satış miktarı
+        revenue = CartOrderItems.objects.filter(vendor=vendor, order__paid_status=True).aggregate(price=Sum("total"))  # Satıcıya ait satış miktarı
         total_sales = CartOrderItems.objects.filter(vendor=vendor, order__paid_status=True).aggregate(quantity=Sum("quantity"))  # Satıcıya ait satış miktarı
     else:
         products = Product.objects.none()  # Satıcı yoksa hiç ürün gösterme
@@ -341,6 +343,6 @@ def change_password(request):
         user.set_password(new_password)
         user.save()
         messages.success(request, "Şifre başarıyla değiştirildi. Tekrar giriş yapın.")
-        return redirect("login")
+        return redirect("userauths:signin")
 
     return render(request, "useradmin/change_password.html")

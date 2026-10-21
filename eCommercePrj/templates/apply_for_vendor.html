@@ -4,66 +4,77 @@
 <div class="container">
     <h2 class="my-4">Satıcı Olma Başvurusu</h2>
     <p class="mb-4">Satıcı olabilmek için aşağıdaki bilgileri doldurun. Başvurunuz yönetici tarafından incelenecektir.</p>
-
+    {% if form.errors %}
+    <div class="alert alert-danger">{{ form.errors }}</div>
+    {% endif %}
     <form method="POST" enctype="multipart/form-data" class="p-4 rounded shadow-sm bg-light">
         {% csrf_token %}
         
         <!-- Satıcı Başlık / Firma Adı -->
         <div class="form-group mb-4">
             <label for="title" class="form-label">Satıcı Adı</label>
-            <input type="text" class="form-control form-control-lg" id="title" name="title" value="{{ profile.full_name }}" required placeholder="Satıcı adı veya firma adı girin">
+            {% comment %} <input type="text" class="form-control form-control-lg" id="title" name="title" value="{{ profile.full_name }}" required placeholder="Satıcı adı veya firma adı girin"> {% endcomment %}
+            {{form.title}}
         </div>
     
         <!-- Satıcı Resmi -->
         <div class="form-group mb-4">
             <label for="image" class="form-label">Satıcı Görseli</label>
-            <input type="file" class="form-control form-control-lg" id="image" name="image" accept="image/*" required>
+            {% comment %} <input type="file" class="form-control form-control-lg" id="image" name="image" accept="image/*" required> {% endcomment %}
+            {{form.image}}
             <small class="form-text text-muted">Görseliniz, satış profilinizde görünecektir. (JPG, PNG veya GIF)</small>
         </div>
     
         <!-- Açıklama -->
         <div class="form-group mb-4">
             <label for="description" class="form-label">Açıklama</label>
-            <input value="{{ profile.bio }}" class="form-control form-control-lg" id="description" name="description" rows="4" required placeholder="Satıcı hakkında kısa bir açıklama yazın.">
+            {% comment %} <input value="{{ profile.bio }}" class="form-control form-control-lg" id="description" name="description" rows="4" required placeholder="Satıcı hakkında kısa bir açıklama yazın."> {% endcomment %}
+            {{form.description}}
             <small class="form-text text-muted">Açıklamanız, müşterilerin sizi tanımasına yardımcı olur.</small>
         </div>
     
         <!-- Adres -->
         <div class="form-group mb-4">
             <label for="address" class="form-label">Adres</label>
-            <input value="{{ profile.address }}" type="text" class="form-control form-control-lg" id="address" name="address" required placeholder="Adresinizi girin">
+            {% comment %} <input value="{{ profile.address }}" type="text" class="form-control form-control-lg" id="address" name="address" required placeholder="Adresinizi girin"> {% endcomment %}
+            {{form.address}}
         </div>
 
         <!-- Ulke -->
         <div class="form-group mb-4">
             <label for="country" class="form-label">Ulke</label>
-            <input value="{{ profile.country }}" type="text" class="form-control form-control-lg" id="country" name="country" required placeholder="Ulkenizi girin">
+            {% comment %} <input value="{{ profile.country }}" type="text" class="form-control form-control-lg" id="country" name="country" required placeholder="Ulkenizi girin"> {% endcomment %}
+            {{form.country}}
         </div>
     
         <!-- İletişim Bilgileri -->
         <div class="form-group mb-4">
             <label for="contact" class="form-label">İletişim Numarası</label>
-            <input value="{{ profile.phone }}" type="text" class="form-control form-control-lg" id="contact" name="contact" required placeholder="Telefon numaranızı girin">
+            {% comment %} <input value="{{ profile.phone }}" type="text" class="form-control form-control-lg" id="contact" name="contact" required placeholder="Telefon numaranızı girin"> {% endcomment %}
+            {{form.contact}}
             <small class="form-text text-muted">Müşterilerinizle kolayca iletişime geçebilmeniz için geçerli bir telefon numarası girin.</small>
         </div>
     
         <!-- Chat Yanıt Süresi -->
         <div class="form-group mb-4">
             <label for="chat_resp_time" class="form-label">Chat Yanıt Süresi (dakika)</label>
-            <input value="0" type="number" class="form-control form-control-lg" id="chat_resp_time" name="chat_resp_time" required placeholder="Chat yanıt süresi girin">
+            {% comment %} <input value="0" type="number" class="form-control form-control-lg" id="chat_resp_time" name="chat_resp_time" required placeholder="Chat yanıt süresi girin"> {% endcomment %}
+            {{form.chat_resp_time}}
         </div>
     
         <!-- Teslimat Süresi -->
         <div class="form-group mb-4">
             <label for="shipping_on_time" class="form-label">Teslimat Süresi (%)</label>
-            <input value="0" type="number" class="form-control form-control-lg" id="shipping_on_time" name="shipping_on_time" required placeholder="Teslimat süresi girin">
+            {% comment %} <input value="0" type="number" class="form-control form-control-lg" id="shipping_on_time" name="shipping_on_time" required placeholder="Teslimat süresi girin"> {% endcomment %}
+            {{form.shipping_on_time}}
             <small class="form-text text-muted">Teslimatlarınızın zamanında yapılma oranını belirtin.</small>
         </div>
     
         <!-- İade Süresi -->
         <div class="form-group mb-4">
             <label for="days_return" class="form-label">İade Süresi (gün)</label>
-            <input value="0" type="number" class="form-control form-control-lg" id="days_return" name="days_return" required placeholder="İade süresi girin">
+            {% comment %} <input value="0" type="number" class="form-control form-control-lg" id="days_return" name="days_return" required placeholder="İade süresi girin"> {% endcomment %}
+            {{form.days_return}}
             <small class="form-text text-muted">Müşterilerinizin ürünleri iade edebileceği süreyi girin.</small>
         </div>
     

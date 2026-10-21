@@ -71,7 +71,7 @@
                     <div class="stat-card card shadow-sm">
                         <div class="card-body">
                             <h5 class="card-title text-warning">Toplam Kazanç</h5>
-                            <p class="card-text text-dark">₺ {{ revenue }}</p>
+                            <p class="card-text text-dark">$ {{ revenue }}</p>
                         </div>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                     <div class="stat-card card shadow-sm">
                         <div class="card-body">
                             <h5 class="card-title text-primary">Aylık Kazanç</h5>
-                            <p class="card-text text-dark">₺ {{ monthly_revenue }}</p>
+                            <p class="card-text text-dark">$ {{ monthly_revenue }}</p>
                         </div>
                     </div>
                 </div>
@@ -126,13 +126,13 @@
                         <tbody>
                             {% for order_item in latest_orders %}
                             <tr>
-                                <td>{{ order_item.order.id }}</td>
-                                <td>{{ order_item.order.user.first_name }} {{ order_item.order.user.last_name }}</td>
-                                <td>{{ order_item.order.user.email }}</td>
-                                <td>{{ order_item.order.user.profile.phone }}</td>
-                                <td>{{ order_item.order.order_date }}</td>
-                                <td>{{ order_item.order.price }}</td>
-                                {% if order_item.order.paid_status %}
+                                <td>{{ order_item.id }}</td>
+                                <td>{{ order_item.user.first_name }} {{ order_item.user.last_name }}</td>
+                                <td>{{ order_item.user.email }}</td>
+                                <td>{{ order_item.user.profile.phone }}</td>
+                                <td>{{ order_item.order_date }}</td>
+                                <td>{{ order_item.price }}</td>
+                                {% if order_item.paid_status %}
                                     <td><span class="badge bg-success text-white">Ödendi</span></td>
                                 {% else %}
                                     <td><span class="badge bg-danger text-white">Ödenmedi</span></td>

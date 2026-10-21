@@ -29,7 +29,7 @@
             <tr>
                 <td>INVOICE-NO-{{o.oid}}</td>
                 <td>{{o.order_date}}</td>
-                <td><span class="badge bg-success">{{o.product_status}}</span></td>
+                <td><span class="badge bg-success">{{o.is_completed}}</span></td>
                 <td>${{o.price}}</td>
                 <td>
                     <a href="{% url "order_detail" o.oid %}" class="btn btn-info btn-sm">View</a>

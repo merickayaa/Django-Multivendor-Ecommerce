@@ -33,3 +33,6 @@ desktop.ini
 
 # Log dosyaları
 *.log
+
+# Deploy paketleri
+*.zip

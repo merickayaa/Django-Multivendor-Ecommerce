@@ -33,15 +33,6 @@
                                     <li class="list-inline-item">
                                         <a href="{% url "vendors_about" vendor.vid %}" class="btn btn-info">Satici Profili</a>
                                     </li>
-                                    <!-- Arama Formu -->
-                                    <li class="list-inline-item flex-grow-1 text-center">
-                                        <form class="d-flex" role="search">
-                                            <input class="form-control me-2" type="search" placeholder="Bu Ortaya Alinacak" aria-label="Search">
-                                            <button class="btn btn-outline-info" type="submit">
-                                                <i class="fa-solid fa-magnifying-glass"></i>
-                                            </button>
-                                        </form>
-                                    </li>
                                 </ul>
                                 
                             </div>
@@ -74,7 +65,7 @@
                                         alt="Ürün 1">
                                     <div class="card-body text-center">
                                         <h5 class="card-title">{{product.title}}</h5>
-                                        <p class="card-text">₺<span class="current-product-price-{{product.id}}">{{product.price}}</span></p>
+                                        <p class="card-text">$<span class="current-product-price-{{product.id}}">{{product.price}}</span></p>
                                         <input type="hidden" value="1" id="product-quantity" class="product-quantity-{{product.id}}">
                                         <input type="hidden" value="{{product.pid}}" class="product-pid-{{product.id}}">
                                         <input type="hidden" value="{{product.image}}" class="product-image-{{product.id}}">
@@ -117,7 +108,7 @@
                         <img src="{{product.image.url}}" class="card-img-top" alt="Ürün 1">
                         <div class="card-body">
                             <h5 class="card-title">{{product.title}}</h5>
-                            <p class="card-text">₺<span class="current-product-price-{{product.id}}">{{product.price}}</span></p>
+                            <p class="card-text">$<span class="current-product-price-{{product.id}}">{{product.price}}</span></p>
                             <input type="hidden" value="1" id="product-quantity" class="product-quantity-{{product.id}}">
                             <input type="hidden" value="{{product.pid}}" class="product-pid-{{product.id}}">
                             <input type="hidden" value="{{product.image}}" class="product-image-{{product.id}}">

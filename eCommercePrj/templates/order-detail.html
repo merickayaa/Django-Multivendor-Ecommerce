@@ -30,9 +30,19 @@
                                                     <p class="card-text text-secondary">
                                                         <span class="mx-2 fw-bold quantity">Quantity: {{p.quantity}}</span>
                                                     </p>
-                                                    <p class="card-text fw-bold fs-5 price"><span>Fiyat: </span>₺{{p.total|floatformat:2}}</p>
+                                                    <p class="card-text fw-bold fs-5 price"><span>Fiyat: </span>${{p.total|floatformat:2}}</p>
+                                                    
+                                                    <p class="card-text fs-5"><span class="fw-bold fs-5">Ürün Teslimat Durumu:</span>
+                                                    {% if p.product_status == "delivered" %}
+                                                    Teslim Edildi
+                                                    {% elif p.product_status == "shipped" %}
+                                                    Kargoya Verildi
+                                                    {% elif p.product_status == "process" %}
+                                                    Hazırlanıyor
+                                                    {% endif %}
+                                                    </p>
                                                 </div>
-                                                {% if order.product_status == "delivered" %}
+                                                {% if p.product_status == "delivered" %}
                                                 {% if p.user_review %}
                                                 <p class="text-success">Bu ürünü değerlendirdiniz: {{ p.user_review.rating }} ★</p>
                                                 <p class="text-muted">"{{ p.user_review.review }}"</p>
@@ -54,8 +64,8 @@
                 </div>
             </div>
             <!-- İçerik End -->
-            {% if order.product_status == "delivered" %}
             {% for p in products %}
+            {% if p.product_status == "delivered" %}
             <!-- Modal -->
             <div class="modal fade" id="reviewModal{{p.id}}" tabindex="-1" aria-labelledby="reviewModal{{p.id}}Label" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
@@ -102,8 +112,8 @@
                     </div>
                 </div>
             </div>
-        {% endfor %}
-        {% endif %}
+            {% endif %}
+            {% endfor %}
         
             <!-- Footer -->
             <footer class="bg-light text-center text-lg-start mt-4">

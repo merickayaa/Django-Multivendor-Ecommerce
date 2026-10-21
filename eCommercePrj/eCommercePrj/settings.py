@@ -12,27 +12,29 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import sys
+from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g+xwin)9)rfpb#rpe1-p-mtq*5s2l0l49yg+9k1@w84=$qc1e&'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('IS_DEV', 'False') == 'True'
 
-ALLOWED_HOSTS = ["1d28-2a00-1d37-1f1c-ba00-7d52-695c-37dd-b421.ngrok-free.app","127.0.0.1"]
-CSRF_TRUSTED_ORIGINS = ["https://1d28-2a00-1d37-1f1c-ba00-7d52-695c-37dd-b421.ngrok-free.app"]
+ALLOWED_HOSTS = [os.environ['APP_HOST']]
+CSRF_TRUSTED_ORIGINS = [os.environ['APP_HOST']]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django_ngrok',
     'django.contrib.humanize',
     'reportlab',
     'paypal.standard.ipn',
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'userauths',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -96,10 +99,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'e_commerce',
-        'USER': 'root',
-        'PASSWORD': 'Kws5SPx20qMrP.',
+        'USER': os.environ["DB_USER"],
+        'PASSWORD': os.environ["DB_PASSWORD"],
         'HOST': 'django-project-db.cfsyoaks0gdj.eu-north-1.rds.amazonaws.com',
         'PORT': '3306',
+        "OPTIONS": {
+                    "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+                },
     }
 }
 
@@ -149,8 +155,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-
-
+TAGGIT_CASE_INSENSITIVE = True
+TAGGIT_STRIP_UNICODE_WHEN_SLUGIFYING = True
 
 JAZZMIN_SETTINGS = {
     "site_title": "E-Ticaret Yönetim Paneli",
@@ -169,5 +175,25 @@ AUTH_USER_MODEL = "userauths.User"
 CKEDITOR_UPLOAD_PATH = "uploads/"
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Oturumları veritabanında saklar
 
-PAYPAL_RECEIVER_EMAIL = 'sb-7u1ao34805248@business.example.com'
+PAYPAL_RECEIVER_EMAIL = os.environ['PAYPAL_EMAIL']
 PAYPAL_TEST = True
+
+USE_S3 = os.environ.get('USE_S3', 'False') == 'True'
+if USE_S3:
+    AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
+    AWS_S3_REGION_NAME = 'eu-north-1'
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_ADDRESSING_STYLE = 'virtual'
+    AWS_QUERYSTRING_AUTH = False
+    MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+    AWS_S3_FILE_OVERWRITE = False
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage" if USE_S3
+                   else "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}

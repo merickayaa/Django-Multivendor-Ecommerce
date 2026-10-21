@@ -27,7 +27,7 @@
                                       <img src="{{category.image.url}}" class="card-img-top" alt="...">
                                       <div class="card-body">
                                         <h5 class="card-title">
-                                            <a type="button" class="btn btn-outline-danger" style="background-color: #f6d260; color: #000;" href="{% url "category_product_list" category.cid %}">
+                                            <a type="button" class="btn btn-outline-danger" style="background-color: #f6d260; color: #000;" href="{% url "products_list" %}?category={{ category.cid }}">
                                                 {{ category.title }}
                                             </a>
                                         </h5>

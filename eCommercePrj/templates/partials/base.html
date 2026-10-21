@@ -200,8 +200,8 @@
                     </a>
                     <!-- Search Form -->
                     <div class="navbar-brand mx-auto">
-                        <form class="d-flex" role="search" action="{% url "search" %}" method="GET">
-                            <input class="form-control me-2" type="search" placeholder="Bu Ortaya Alinacak" aria-label="Search" name="q">
+                        <form class="d-flex" role="search" action="{% url "products_list" %}" method="GET">
+                            <input class="form-control me-2" type="search" placeholder="Bu Ortaya Alinacak" aria-label="Search" name="q" value="{{ request.GET.q }}">
                             <button class="btn btn-outline-info" type="submit">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </button>
@@ -228,7 +228,7 @@
                                 </a>
                             </button>
                             <ul class="dropdown-menu">
-                                {% if request.user.is_superuser %}
+                                {% if request.user.is_vendor %}
                                 <li>
                                     <a class="dropdown-item" href="{% url "useradmin:dashboard" %}">
                                         <button type="button" class="btn btn-info w-100 text-center">

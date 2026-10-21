@@ -43,11 +43,11 @@
             </p>
             {% endif %}
             <h2 class="text-primary fw-bold">
-                ₺ <span>{{ product.price }}</span>
+                $ <span>{{ product.price }}</span>
             </h2>
             {% if product.old_price > product.price %}
             <h3 class="text-muted text-decoration-line-through" style="font-size: 1.2rem;">
-                ₺{{ product.old_price }}
+                ${{ product.old_price }}
             </h3>
             {% endif %}
             <p class="mt-4">
@@ -63,7 +63,7 @@
             </ul>
             <ul class="list-group list-group-horizontal">
                 <li class="list-group-item border border-0"><strong>Stok Kodu:</strong> {{product.sku}}</li>
-                <li class="list-group-item border border-0"><strong>Etiketler:</strong> {%for tag in product.tags.all %}<a class="btn p-0" id="tag_link" href="{% url "tags" tag.slug %}">#{{tag.name}}</a>, {% endfor %}</li>
+                <li class="list-group-item border border-0"><strong>Etiketler:</strong> {%for tag in product.tags.all %}<a class="btn p-0" id="tag_link" href="{% url "products_list" %}?tags={{tag.slug}}">#{{tag.name}}</a>, {% endfor %}</li>
             </ul>
             <div class="wrapped">
                 <p class="card-text text-secondary">

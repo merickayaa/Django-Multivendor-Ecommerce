@@ -19,7 +19,7 @@
                     <h5 class="card-title mt-4">Description</h5>
                     <p class="card-text">{{ request.user.profile.bio }}</p>
                     <h5 class="card-title mt-4">Toplam Gelir</h5>
-                    <p class="card-text">₺{{ revenue.price|floatformat:2 }}</p>
+                    <p class="card-text">${{ revenue.price|floatformat:2 }}</p>
                     <h5 class="card-title mt-4">Toplam Satış Adedi</h5>
                     <p class="card-text">{{ total_sales.quantity }}</p>
                 </div>
@@ -36,7 +36,7 @@
                 <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
                 <div class="card-body">
                     <h5 class="card-title">{{ product.title }}</h5>
-                    <p class="card-text">₺{{ product.price|floatformat:2 }}</p>
+                    <p class="card-text">${{ product.price|floatformat:2 }}</p>
                     <p class="card-text">{{ product.description|truncatewords:15|safe }}</p>
                     <a href="{% url 'useradmin:edit_product' product.pid %}" class="btn btn-primary">Detaylar</a>
                 </div>

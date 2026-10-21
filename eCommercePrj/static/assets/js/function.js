@@ -1,3 +1,12 @@
+function ajaxError(xhr) {
+    if (xhr.status === 401){
+        alert(xhr.responseJSON.error)
+        window.location.href = xhr.responseJSON.login_url
+        return
+    }
+    alert(xhr.responseJSON ? xhr.responseJSON.error : "Bir hata oluştu")
+}
+
 $(document).on("click", "#add-to-cart-btn", function () {
     let this_val = $(this)
     let parentCard = this_val.closest(".card-body");
@@ -40,8 +49,22 @@ $(document).on("click", "#add-to-cart-btn", function () {
             this_val.html("✓")
             console.log("Added Product to Cart")
             $(".cart-items-count").text(response.totalcartitems)
-        }
+        },
+        error: ajaxError
     })
+});
+
+$(document).on("click", ".increase-btn-detail, .decrease-btn-detail", function () {
+    let this_val = $(this);
+    let parentRow = this_val.closest(".wrapped");
+    let quantityElement = parentRow.find(".quantity");
+    let currentQty = parseInt(quantityElement.text());
+    let newQty = $(this).hasClass("increase-btn-detail") ? currentQty + 1 : (currentQty > 1 ? currentQty - 1 : 1); // Miktar 1'den küçük olmasın
+
+    if (newQty >= 1) {
+        quantityElement.text(newQty);
+        parentRow.find(".product-quantity").val(newQty);
+    }
 });
 
 $(document).on("click", "#add-to-cart-btn-detail", function () {
@@ -85,10 +108,8 @@ $(document).on("click", "#add-to-cart-btn-detail", function () {
             this_val.html("✓")
             console.log("Added Product to Cart")
             $(".cart-items-count").text(response.totalcartitems)
-        },error: function(response){
-            console.log(response)
-            console.log("Not Added Product to Cart")
-        }
+        },
+        error: ajaxError
     })
 });
 
@@ -124,19 +145,19 @@ $(document).on("click", ".increase-btn, .decrease-btn", function () {
                         let productTotalElement = parentRow.find(".product-total");
 
                         // Miktar ve fiyat çarpımını hesaplayıp DOM'da göster
-                        productTotalElement.text(`₺${(price * newQty).toFixed(2)}`);
+                        productTotalElement.text(`$${(price * newQty).toFixed(2)}`);
                     } else {
                         console.error("Ürün verisi bulunamadı");
                     }
 
                     // Sepet toplamını güncelle
-                    $(".cart-total-amount").text(`₺${response.cart_total_amount.toFixed(2)}`);
+                    $(".cart-total-amount").text(`$${response.cart_total_amount.toFixed(2)}`);
                     $(".cart-items-count").text(response.totalcartitems);
 
                     // Sepetteki ürünlerin toplamını canlı olarak güncelle
                     $.each(response.cart_data, function(productId, itemData) {
                         // Her bir ürün için miktar ve toplam fiyatı güncelle
-                        $(`#product-${productId}`).find('.product-total').text(`₺${(itemData.price * itemData.qty).toFixed(2)}`);
+                        $(`#product-${productId}`).find('.product-total').text(`$${(itemData.price * itemData.qty).toFixed(2)}`);
                         $(`#product-${productId}`).find('.quantity').text(itemData.qty);
                     });
                     
@@ -152,79 +173,9 @@ $(document).on("click", ".increase-btn, .decrease-btn", function () {
                     console.error("Sepet güncellenirken hata oluştu:", response.error);
                 }
             },
-            error: function (xhr) {
-                console.error("Hata:", xhr.responseText);
-            }
+            error: ajaxError
         });
     }
-});
-
-
-
-
-
-$(document).on("click", ".increase-btn-detail, .decrease-btn-detail", function () {
-    let this_val = $(this);
-    let parentRow = this_val.closest(".wrapped");
-    let quantityElement = parentRow.find(".quantity");
-    let currentQty = parseInt(quantityElement.text());
-    let newQty = $(this).hasClass("increase-btn-detail") ? currentQty + 1 : (currentQty > 1 ? currentQty - 1 : 1); // Miktar 1'den küçük olmasın
-    let productId = parentRow.find(".product-pid").val();
-    let productTitle = parentRow.find(".product-title").val();
-    let productPrice = parentRow.find(".current-product-price").val();
-    let productImage = parentRow.find(".product-image").val();
-    let productVendor = parentRow.find(".product-vendor").val();
-
-    if (newQty >= 1) {
-        quantityElement.text(newQty);
-    }
-
-    // Sepete eklemek için Butona Tıklama
-    $(document).on("click", "#add-to-cart-btn-detail", function () {
-        let this_val = $(this)
-        let parentCard = this_val.closest(".wrapped");
-        let quantity = parentCard.find(".product-quantity").val();
-        let product_title = parentCard.find(".product-title").val();
-        let product_id = parentCard.find(".product-id").val();
-        let product_price = parentCard.find(".current-product-price").val();
-        let product_pid = parentCard.find(".product-pid").val();
-        let product_image = parentCard.find(".product-image").val();
-        let product_vendor = parentCard.find(".product-vendor").val();
-        console.log("Quantity:", quantity);
-        console.log("parentCard:", parentCard);
-        console.log("Title:", product_title);
-        console.log("Price:", product_price);
-        console.log("ID:", product_id);
-        console.log("PID:", product_pid);
-        console.log("IMG:", product_image);
-        console.log("Vendor:", product_vendor);
-        console.log("this_val:", this_val);
-
-        console.log("Current Element:", this_val);
-        $.ajax({
-            url: '/add-to-cart/',
-            type: 'POST',
-            data: {
-                'id':product_id,
-                'pid':product_pid,
-                'image': product_image,
-                'qty':quantity,
-                'title': product_title,
-                'price': product_price,
-                'vendor': product_vendor
-            },
-            dataType:'json',
-            beforeSend:function(){
-                console.log("Adding Product to Cart")
-            },
-            success: function(response){
-                console.log(response);
-                this_val.html("✓")
-                console.log("Added Product to Cart")
-                $(".cart-items-count").text(response.totalcartitems)
-            }
-        })
-    });
 });
 
 
@@ -309,10 +260,7 @@ $(document).on("click", ".add-to-wishlist", function (){
                 console.log("Added to wishlist");
             }
         },
-        error: function (xhr, status, error) {
-            console.error("Error: ", error);
-            console.log("Response: ", xhr.responseText);
-        }
+        error: ajaxError
     });
 })
 
@@ -330,9 +278,7 @@ $(document).on("click", ".delete-wishlist-product", function () {
                 $("#wishlist-list").html(response.wishlist_html);
             }
         },
-        error: function () {
-            alert("An error occurred while removing the product.");
-        }
+        error: ajaxError
     });
 });
 

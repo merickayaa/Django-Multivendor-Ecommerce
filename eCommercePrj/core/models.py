@@ -5,6 +5,10 @@ from userauths.models import User
 from datetime import datetime,timezone
 from taggit.managers import TaggableManager
 from ckeditor_uploader.fields import RichTextUploadingField
+from django.db.models import Avg
+from django.utils.functional import cached_property
+from django.conf import settings
+
 # Create your models here.
 
 STATUS_CHOICE = (
@@ -13,6 +17,11 @@ STATUS_CHOICE = (
     ("delivered", "Delivered"),
 )
 
+ORDER_STATUS_CHOICE = (
+    ("process", "Processing"),
+    ("completed", "Completed"),
+#   ("İptal", "Delivered"),
+)
 
 STATUS = (
     ("draft", "Draft"),
@@ -20,6 +29,12 @@ STATUS = (
     ("rejected", "Rejected"),
     ("in_review", "In_Review"),
     ("published", "Published"),
+)
+
+PAYMENT_STATE_CHOICE = (
+    ("pending", "Bekliyor"),
+    ("paid", "Ödendi"),
+    ("failed", "Başarısız"),
 )
 
 RATING = (
@@ -60,16 +75,16 @@ class Brand(models.Model):
     def __str__(self):
         return self.title
     
-class Tags(models.Model):
-    pass
+# class Tags(models.Model):
+#     pass
 
 class Vendor(models.Model):
     vid = ShortUUIDField(unique=True, length=10, max_length=20, prefix="ven", alphabet="abcdefgh12345")
     title = models.CharField(max_length=100, default="Vendor Name")
     image = models.ImageField(upload_to=user_directory_path)
-    description = RichTextUploadingField(null=True,blank=True, default="Vendor Desc")
+    description = RichTextUploadingField(default="Vendor Desc")
     address = models.CharField(max_length=100, default="Istanbul")
-    country = models.CharField(max_length=200, null=True,blank=True)
+    country = models.CharField(max_length=200)
     contact = models.CharField(max_length=100, default="+90 555 555 55 55")
     chat_resp_time = models.CharField(max_length=100, default="100")
     shipping_on_time = models.CharField(max_length=100, default="100")
@@ -111,7 +126,7 @@ class Product(models.Model):
     specifications = RichTextUploadingField(null=True,blank=True, default="This is a Product")
     # stock_count = models.CharField(max_length=100, default="10", null=True, blank=True)
     # mfd = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-    # tags = TaggableManager(blank=True)
+    tags = TaggableManager(blank=True)
     product_status = models.CharField(choices=STATUS, max_length=10, default="in_review")
     # in_stock = models.BooleanField(default=True)
     featured = models.BooleanField(default=False)
@@ -123,6 +138,23 @@ class Product(models.Model):
     
     class Meta:
         verbose_name_plural = "Products"
+
+    @cached_property
+    def average_rating(self):
+        if hasattr(self, "avg_rating"):            # annotate ile geldiyse sorgu atma
+            return self.avg_rating or 0
+        avg = self.productreview_set.aggregate(avg=Avg("rating"))["avg"]
+        return avg or 0
+    @property
+    def full_stars(self):
+        return range(int(self.average_rating))
+    @property
+    def half_star(self):
+        return self.average_rating - int(self.average_rating) >= 0.5
+    @property
+    def empty_stars(self):
+        return range(5 - int(self.average_rating) - int(self.half_star))
+    
 
     def product_image(self):
         print(self.image.url)
@@ -154,7 +186,7 @@ class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, related_name="product_cart", null=True)
     # title = models.CharField(max_length=200)
-    quantity = models.IntegerField(default=1)
+    quantity = models.PositiveIntegerField(default=1)
     # price = models.DecimalField(max_digits=10, decimal_places=2)
     # image = models.CharField(max_length=200)
     # vendor = models.CharField(max_length=100)
@@ -163,16 +195,39 @@ class Cart(models.Model):
     def __str__(self):
         return f"{self.user.username}"
 
+class Address(models.Model):
+    # aid = ShortUUIDField(unique=True, length=10, max_length=20,prefix="loc", alphabet="abcdefgh12345")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='+')
+    title = models.CharField(max_length=100, default="Home")
+    phone = models.CharField(max_length=300,null=True)
+    address = models.CharField(max_length=100, null=True)
+    country = models.CharField(max_length=100, null=True)
+    status = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "Address"
+
 class CartOrder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     oid = ShortUUIDField(unique=True, length=4, max_length=10, alphabet="1234567890")
     invoice_no = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=1.99)
     paid_status = models.BooleanField(default=False)
+    payment_status = models.CharField(choices=PAYMENT_STATE_CHOICE, max_length=20, default="pending")
     order_date = models.DateTimeField(auto_now_add=True)
-    product_status = models.CharField(choices=STATUS_CHOICE, max_length=10, default="process")
+    product_status = models.CharField(choices=ORDER_STATUS_CHOICE, max_length=10, default="process")
+    shipping_title = models.CharField(max_length=100)
+    shipping_phone = models.CharField(max_length=300)
+    shipping_country = models.CharField(max_length=100)
+    shipping_address = models.CharField(max_length=100)
     class Meta:
         verbose_name_plural = "Cart Order"
+
+    def is_completed(self):
+        if not self.cartorderitems_set.exclude(product_status = "delivered").exists() == True:
+            return "Completed"
+        else:
+            return "Process"
 
 class CartOrderItems(models.Model):
     order = models.ForeignKey(CartOrder, on_delete=models.CASCADE)
@@ -180,13 +235,13 @@ class CartOrderItems(models.Model):
     product_status = models.CharField(choices=STATUS_CHOICE, max_length=200, default="process")
     item = models.CharField(max_length=200)
     image = models.CharField(max_length=200)
-    quantity = models.IntegerField(default=0)
+    quantity = models.PositiveIntegerField(default=0)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=1.99)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=1.99)
     class Meta:
         verbose_name_plural = "Cart Order Items"
     def order_image(self):
-        return format_html('<img src="/media/{}" width="50" height="50"/>', self.image.url)
+        return format_html('<img src="{}{}" width="50" height="50"/>', settings.MEDIA_URL, self.image)
 
 
 
@@ -221,14 +276,3 @@ class Wishlist(models.Model):
     def __str__(self):
         return self.product.title
     
-class Address(models.Model):
-    # aid = ShortUUIDField(unique=True, length=10, max_length=20,prefix="loc", alphabet="abcdefgh12345")
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='+')
-    title = models.CharField(max_length=100, default="Home")
-    phone = models.CharField(max_length=300,null=True)
-    address = models.CharField(max_length=100, null=True)
-    country = models.CharField(max_length=100, null=True)
-    status = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name_plural = "Address"

@@ -1,6 +1,8 @@
 import time
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
+from core.filters import ProductFilter
+from useradmin.forms import VendorForm
 from userauths.models import User, ContactUs,Profile
 from core.models import Product,Category,Vendor,CartOrderItems,CartOrder, Wishlist, Address, ProductImages, ProductReview,Brand, Cart
 from taggit.models import Tag
@@ -12,6 +14,8 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from paypal.standard.forms import PayPalPaymentsForm
 from django.contrib.auth.decorators import login_required
+from core.decorators import ajax_login_required
+
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -25,66 +29,23 @@ from django.contrib.auth.hashers import check_password
 from paypal.standard.models import ST_PP_COMPLETED
 from paypal.standard.ipn.models import PayPalIPN
 from paypal.standard.ipn.signals import valid_ipn_received
+from paypal.standard.models import (
+    ST_PP_COMPLETED, ST_PP_DENIED, ST_PP_FAILED, ST_PP_EXPIRED,
+    ST_PP_VOIDED, ST_PP_REVERSED, ST_PP_REFUNDED,
+)
 
-def baseView(view_func):
-    def wrapper(request, *args, **kwargs):
-        # code to be executed before the view
-        for product in args:
-            average_rating = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
-            average_rating = average_rating['rating'] or 0.0
-            full_stars = math.floor(average_rating)
-            half_star = 1 if (average_rating - full_stars) >= 0.5 else 0
-            empty_stars = 5 - full_stars - half_star
-            product.full_stars = ['★'] * full_stars
-            product.half_star = ['☆'] * half_star
-            product.empty_stars = ['☆'] * empty_stars
-            product.average_rating = average_rating
-        response = view_func(request, *args, **kwargs)
-        # code to be executed after the view
-        return response
-    return wrapper
 # Create your views here.
-@baseView
+
 def index(request):
     try:
         vendor = Vendor.objects.get(user=request.user)
-        products = Product.objects.filter(product_status="published").exclude(vendor=vendor)
-        featured_products = Product.objects.filter(product_status="published", featured = True).exclude(vendor=vendor)
-        last_products = Product.objects.filter(product_status="published").exclude(vendor=vendor).order_by("-date")[:3]
+        products = Product.objects.filter(product_status="published").exclude(vendor=vendor).annotate(avg_rating=Avg("productreview__rating"))
+        featured_products = Product.objects.filter(product_status="published", featured = True).exclude(vendor=vendor).annotate(avg_rating=Avg("productreview__rating"))
+        last_products = Product.objects.filter(product_status="published").exclude(vendor=vendor).annotate(avg_rating=Avg("productreview__rating")).order_by("-date")[:3]
     except:
-        products = Product.objects.filter(product_status="published")
-        featured_products = Product.objects.filter(product_status="published", featured = True)
-        last_products = Product.objects.filter(product_status="published").order_by("-date")[:3]
-    for product in products:
-        average_rating = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
-        average_rating = average_rating['rating'] or 0.0
-        full_stars = math.floor(average_rating)
-        half_star = 1 if (average_rating - full_stars) >= 0.5 else 0
-        empty_stars = 5 - full_stars - half_star
-        product.full_stars = ['★'] * full_stars
-        product.half_star = ['☆'] * half_star
-        product.empty_stars = ['☆'] * empty_stars
-        product.average_rating = average_rating
-    for product in featured_products:
-        average_rating = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
-        average_rating = average_rating['rating'] or 0.0
-        full_stars = math.floor(average_rating)
-        half_star = 1 if (average_rating - full_stars) >= 0.5 else 0
-        empty_stars = 5 - full_stars - half_star
-        product.full_stars = ['★'] * full_stars
-        product.half_star = ['☆'] * half_star
-        product.empty_stars = ['☆'] * empty_stars
-        product.average_rating = average_rating
-    for product in last_products:
-        average_rating = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
-        average_rating = average_rating['rating'] or 0.0
-        full_stars = math.floor(average_rating)
-        half_star = 1 if (average_rating - full_stars) >= 0.5 else 0
-        empty_stars = 5 - full_stars - half_star
-        product.full_stars = ['★'] * full_stars
-        product.half_star = ['☆'] * half_star
-        product.empty_stars = ['☆'] * empty_stars
-        product.average_rating = average_rating
+        products = Product.objects.filter(product_status="published").annotate(avg_rating=Avg("productreview__rating"))
+        featured_products = Product.objects.filter(product_status="published", featured = True).annotate(avg_rating=Avg("productreview__rating"))
+        last_products = Product.objects.filter(product_status="published").annotate(avg_rating=Avg("productreview__rating")).order_by("-date")[:3]
     context = {
         'products':products,
         'last_products':last_products,
@@ -93,15 +54,18 @@ def index(request):
     }
     return render(request, 'index.html', context)
 
-@baseView
+
 def products_list_view(request):
     try:
         vendor = Vendor.objects.get(user=request.user)
-        products = Product.objects.filter(product_status="published").exclude(vendor=vendor)
+        products = Product.objects.filter(product_status="published").select_related("category", "vendor").exclude(vendor=vendor).annotate(avg_rating=Avg("productreview__rating"))
+        product_filter = ProductFilter(request.GET, queryset=products)
     except:
-        products = Product.objects.filter(product_status="published")
+        products = Product.objects.filter(product_status="published").select_related("category", "vendor").annotate(avg_rating=Avg("productreview__rating"))
+        product_filter = ProductFilter(request.GET, queryset=products)
     context = {
-        'products':products,
+        'filter':product_filter,
+        'products':product_filter.qs,
     }
     return render(request, 'products-list.html', context)
 
@@ -113,28 +77,15 @@ def category_list_view(request):
     }
     return render(request, 'category-list.html', context)
 
-@baseView
+
 def category_product_list_view(request, cid):
-    category = Category.objects.get(cid=cid)
-    try:
-        vendor = Vendor.objects.get(user=request.user)
-        products = Product.objects.filter(product_status="published", category=category).exclude(vendor=vendor)
-    except:
-        products = Product.objects.filter(product_status="published", category=category)
-    brands = Brand.objects.filter(categories=category)
-    categories = Category.objects.all()
-    context = {
-        'products': products,
-        'category': category,
-        'categories': categories,
-        'brands': brands,
-    }
-    return render(request, 'products-list.html', context)
+    category = get_object_or_404(Category, cid=cid)
+    return redirect(f"{reverse('products_list')}?category={category.cid}")
 
 def vendor_detail_view(request,vid):
-    vendor = Vendor.objects.get(vid=vid)
-    products = Product.objects.filter(vendor=vendor,product_status="published")
-    last_products = Product.objects.filter(vendor=vendor,product_status="published").order_by("-date")[:3]
+    vendor = get_object_or_404(Vendor, vid=vid)
+    products = Product.objects.filter(vendor=vendor,product_status="published").annotate(avg_rating=Avg("productreview__rating"))
+    last_products = Product.objects.filter(vendor=vendor,product_status="published").annotate(avg_rating=Avg("productreview__rating")).order_by("-date")[:3]
     context = {
         'vendor':vendor,
         'products':products,
@@ -143,15 +94,15 @@ def vendor_detail_view(request,vid):
     return render(request,'vendor_details.html', context)
 
 def vendor_about_view(request,vid):
-    vendor = Vendor.objects.get(vid=vid)
+    vendor = get_object_or_404(Vendor, vid=vid)
     context = {
         'vendor':vendor,
     }
     return render(request,'vendor_about.html', context)
 
 def vendor_products_list_view(request,vid):
-    vendor = Vendor.objects.get(vid=vid)
-    products = Product.objects.filter(vendor=vendor,product_status="published")
+    vendor = get_object_or_404(Vendor, vid=vid)
+    products = Product.objects.filter(vendor=vendor,product_status="published").annotate(avg_rating=Avg("productreview__rating"))
     context = {
         'vendor':vendor,
         'products':products,
@@ -159,7 +110,11 @@ def vendor_products_list_view(request,vid):
     return render(request,'vendor_product_list.html', context)
 
 def product_detail_view(request,pid):
-    product = Product.objects.get(pid=pid)
+    try:
+        address = Address.objects.filter(user=request.user, status=True).first()
+    except:
+        address=None
+    product = get_object_or_404(Product, pid=pid)
     p_images = product.product_images.all()
     related_products = Product.objects.filter(category=product.category, product_status="published").exclude(title=product.title)
     reviews = ProductReview.objects.filter(product=product).order_by('-date')
@@ -169,6 +124,7 @@ def product_detail_view(request,pid):
     half_star = 1 if (average_rating - full_stars) >= 0.5 else 0
     empty_stars = 5 - full_stars - half_star
     context = {
+        'address':address,
         'product':product,
         'p_images':p_images,
         'related_products':related_products,
@@ -181,106 +137,32 @@ def product_detail_view(request,pid):
     return render(request,'product_details.html', context)
 
 def tag_list_view(request,tag_slug=None):
-    try:
-        vendor = Vendor.objects.get(user=request.user)
-        products = Product.objects.filter(product_status="published").exclude(vendor=vendor).order_by("-id")
-    except:
-        products = Product.objects.filter(product_status="published").order_by("-id")
-    tag= None
-    if tag_slug:
-        tag = get_object_or_404(Tag, slug=tag_slug)
-        products = products.filter(tags__in=[tag])
+    tag = get_object_or_404(Tag, slug=tag_slug)
+    return redirect(f"{reverse('products_list')}?tags={tag.slug}")
 
-    context = {
-        'products':products,
-    }
-    return render(request, 'tag.html', context)
-
-@baseView
-def search_view(request):
-    query = request.GET.get('q', "")
-    filters = Q()
-    if query:
-        filters |= Q(title__icontains=query) | Q(description__icontains=query) | Q(tags__name__icontains=query)
-    try:
-        vendor = Vendor.objects.get(user=request.user)
-        products = Product.objects.filter(filters).exclude(vendor=vendor).distinct().order_by('-date')
-    except:
-        products = Product.objects.filter(filters).distinct().order_by('-date')
-    brands = Brand.objects.all().order_by('title')
-    context = {
-        # 'min_price':min_price,
-        # 'max_price':max_price,
-        # 'category':category,
-        'query':query,
-        # 'brand':brand,
-        'products': products,
-        'brands':brands,
-
-    }
-    return render(request, 'search.html', context)
-@baseView
-def filter_view(request):
-    if request.method == "GET":
-        category = request.GET.get('category', "")
-        min_price = request.GET.get('min_price', "")
-        max_price = request.GET.get('max_price', "")
-        brand = request.GET.get('brand', "") #bid
-        rating = request.GET.get('rating', "")
-        query = request.GET.get('q', "")
-        
-        # Sorgu oluşturma
-        filters = Q()
-        if query:
-            filters |= Q(title__icontains=query) | Q(description__icontains=query) | Q(tags__name__icontains=query)
-        if brand:
-            filters &= Q(brand__bid__icontains=brand) #brand tablosundaki bid ile brand eslesiyor mu
-        if category:
-            filters &= Q(category__cid__icontains=category)
-        if min_price:
-            filters &= Q(price__gte=min_price)
-        if max_price:
-            filters &= Q(price__lte=max_price)
-        if rating:
-            filters &= Q(rating__gte=rating)
-
-        try:
-            vendor = Vendor.objects.get(user=request.user)
-            products = Product.objects.filter(filters).exclude(vendor=vendor).distinct()
-        except:
-            products = Product.objects.filter(filters).distinct()
-    brands = Brand.objects.filter(category__cid=category).order_by('title') if category else Brand.objects.all().order_by('title')
-        
-
-
-
-    context = {
-        'min_price':min_price,
-        'max_price':max_price,
-        'category':category,
-        'query':query,
-        'brand':brand,
-        'products': products,
-        'brands':brands,
-
-    }
-    return render(request, 'products-list.html', context)
-
-@login_required
+@ajax_login_required
 def add_to_cart(request):
     if request.method == "POST":
         product_pid = request.POST.get('pid')
         print("pid", product_pid)
         # image = request.POST.get('image')
-        quantity = int(request.POST.get('qty', 1))  # Default miktar 1
+        try:
+            quantity = int(request.POST.get("qty", 1))
+        except ValueError:
+            return JsonResponse({"error": "Geçersiz adet"}, status=400)
+
+        if quantity < 1:
+            return JsonResponse({"error": "Adet en az 1 olmalı"}, status=400)
         # title = request.POST.get('title')
         # price = float(request.POST.get('price'))
         # vendor = request.POST.get('vendor')
 
+        product = get_object_or_404(Product, pid=product_pid, product_status="published")
+
         # Kullanıcının sepetinde aynı ürün var mı kontrol et
         cart_item, created = Cart.objects.get_or_create(
             user=request.user,
-            product=Product.objects.get(pid=product_pid),
+            product=product,
             defaults={
                 'quantity': quantity,
             }
@@ -315,11 +197,15 @@ def calculate_cart_totals(user):
     }
     return cart_items.count(), cart_total_amount, cart_data
 
-@login_required
+@ajax_login_required
 def update_cart_item(request):
     if request.method == 'POST':
         product_id = request.POST.get('pid')
-        new_qty = int(request.POST.get('qty', 0))
+        try:
+            new_qty = int(request.POST.get('qty', 0))
+        except ValueError:
+            return JsonResponse({"error": "Geçersiz adet"}, status=400)
+                
 
         # Retrieve the cart item
         cart_item = get_object_or_404(Cart, user=request.user, product__pid=product_id)
@@ -383,42 +269,52 @@ def cart_view(request):
 def create_order_view(request):
     if request.method != "POST":
         return redirect("checkout")
+    address = Address.objects.filter(user=request.user,status=True).first()
+    if not address:
+        messages.warning(request, "Lütfen önce bir teslimat adresi seçin.")
+        return redirect("checkout")
     cart_items = Cart.objects.filter(user=request.user).select_related("product__vendor")
-    # Sipariş oluşturma
-    cart_total_amount = 0
-    # if request.method == 'post':
-    #     with transaction.atomic():
-    order = CartOrder.objects.create(user=request.user, price=0)
-    for item in cart_items:
-        item_total_price = item.quantity * item.product.price
-        cart_total_amount += item_total_price
-        CartOrderItems.objects.create(
-            order=order,
-            item=item.product.title,
-            image=item.product.image,
-            quantity=item.quantity,
-            price=item.product.price,
-            total=item_total_price,
-            vendor=item.product.vendor
-        )
+    if not cart_items:
+        return redirect("cart")
+    with transaction.atomic():
+        # Sipariş oluşturma
+        cart_total_amount = 0
+        order = CartOrder.objects.create(user=request.user, price=0)
+        for item in cart_items:
+            item_total_price = item.quantity * item.product.price
+            cart_total_amount += item_total_price
+            CartOrderItems.objects.create(
+                order=order,
+                item=item.product.title,
+                image=item.product.image,
+                quantity=item.quantity,
+                price=item.product.price,
+                total=item_total_price,
+                vendor=item.product.vendor
+            )
 
-    order.price = cart_total_amount
-    order.invoice_no=order.oid
-    order.save()
+        order.price = cart_total_amount
+        order.invoice_no=order.oid
+        order.shipping_title = address.title
+        order.shipping_phone = address.phone
+        order.shipping_country = address.country
+        order.shipping_address = address.address
+        order.save()
 
 
-    host = request.get_host()
-    paypal_dict = {
-        "business": settings.PAYPAL_RECEIVER_EMAIL,
-        "amount": cart_total_amount,
-        "item_name": f"Order-{order.oid}",
-        "invoice": order.invoice_no,
-        "notify_url": f"http://{host}{reverse('paypal-ipn')}",
-        "return": f"http://{host}{reverse('payment_waiting')}?invoice={order.oid}",
-        "cancel_return": f"http://{host}{reverse('payment_failed')}?invoice={order.oid}",
-        "custom": "premium_plan",  # Custom command to correlate to some function later (optional)
-    }
-    form = PayPalPaymentsForm(initial=paypal_dict)
+        host = request.get_host()
+        paypal_dict = {
+            "business": settings.PAYPAL_RECEIVER_EMAIL,
+            "amount": cart_total_amount,
+            "item_name": f"Order-{order.oid}",
+            "invoice": f"{order.invoice_no}",
+            "notify_url": f"http://{host}{reverse('paypal-ipn')}",
+            "return": f"http://{host}{reverse('payment_waiting')}?invoice={order.oid}",
+            "cancel_return": f"http://{host}{reverse('payment_failed')}?invoice={order.oid}",
+            "error_return": f"http://{host}{reverse('payment_failed')}?invoice={order.oid}",
+            "custom": "premium_plan",  # Custom command to correlate to some function later (optional)
+        }
+        form = PayPalPaymentsForm(initial=paypal_dict)
     return render(request, "paypal_redirect.html", {"form": form})
 
 
@@ -446,6 +342,7 @@ def checkout_view(request):
         except Vendor.DoesNotExist:
             messages.error(request, f"{item.product.vendor} adlı satıcı bulunamadı.")
             return redirect('cart')
+        
         item_total_price = item.quantity * item.product.price
         cart_total_amount += item_total_price
         cart_data[item.product.pid] = {
@@ -484,32 +381,65 @@ def checkout_view(request):
 
 def paypal_payment_received(sender, **kwargs):
     ipn = sender
-    if ipn.payment_status != ST_PP_COMPLETED:
-            return
-    
-    if ipn.receiver_email != settings.PAYPAL_RECEIVER_EMAIL:
-        return
     order = CartOrder.objects.filter(oid=ipn.invoice).first()
-    cart = Cart.objects.get(user=order.user)
+    FAILED_STATES = (ST_PP_DENIED, ST_PP_FAILED, ST_PP_EXPIRED, ST_PP_VOIDED, ST_PP_REVERSED, ST_PP_REFUNDED)
+
+    if not order:
+        return
+    if ipn.payment_status in FAILED_STATES:
+        order.payment_status = "failed"
+        order.paid_status = False
+        order.save()
+        return
+
+    if ipn.payment_status != ST_PP_COMPLETED:
+        return
+
+
+    if ipn.receiver_email != settings.PAYPAL_RECEIVER_EMAIL:
+        order.payment_status = "failed"
+        order.paid_status = False
+        order.save()
+        return
+
+    if ipn.mc_gross != order.price:
+        order.payment_status = "failed"
+        order.paid_status = False
+        order.save()
+        return
+
+    if ipn.mc_currency != "USD":
+        order.payment_status = "failed"
+        order.paid_status = False
+        order.save()
+        return
+
     if ipn.mc_gross == order.price and ipn.mc_currency == "USD":
+        cart = Cart.objects.filter(user=order.user)
+        order.payment_status = "paid"
         order.paid_status = True
         order.save()
         cart.delete()
+        return
+
+
 valid_ipn_received.connect(paypal_payment_received)
         
 @login_required
 def payment_completed_view(request):
     invoice = request.GET.get('invoice')
-    try:
-        order = get_object_or_404(CartOrder, oid=invoice, user=request.user)
-    except CartOrder.DoesNotExist:
-        messages.error(request, "Sipariş bulunamadı.")
-        return redirect("cart")
-    if not order.paid_status:
+    order = get_object_or_404(CartOrder, oid=invoice, user=request.user)
+    if order.payment_status == "failed":
+        return redirect(f"{reverse('payment_failed')}?invoice={order.oid}")
+    if order.payment_status != "paid":
         return redirect(f"{reverse('payment_waiting')}?invoice={order.oid}")
     return render(request, "payment-completed.html", {"order": order})
 
 
+@login_required
+def order_payment_state(request, oid):
+    order = get_object_or_404(CartOrder, oid=oid, user=request.user)
+    return JsonResponse({"state":order.payment_status})
         
 @login_required
 def payment_waiting_view(request):
@@ -517,7 +447,7 @@ def payment_waiting_view(request):
     if not invoice:
         messages.error(request, "Geçersiz fatura numarası.")
         return redirect("cart")
-
+    get_object_or_404(CartOrder, oid=invoice, user=request.user)
     return render(request, 'payment-waiting.html', {"invoice": invoice})
 
 
@@ -526,8 +456,9 @@ def payment_failed_view(request):
     invoice = request.GET.get('invoice')
     if invoice:
         try:
-            order = CartOrder.objects.get(oid=invoice)
-            order.delete()  # Başarısız siparişi sil
+            order = CartOrder.objects.get(oid=invoice, user=request.user)
+            if order.paid_status == False:
+                order.delete()  # Başarısız siparişi sil
         except CartOrder.DoesNotExist:
             pass
 
@@ -537,9 +468,9 @@ def payment_failed_view(request):
 
 @login_required
 def customer_dashboard(request):
-    orders = CartOrder.objects.filter(user=request.user)
+    orders = CartOrder.objects.filter(user=request.user, paid_status=True)
     address = Address.objects.filter(user=request.user)
-    profile = Profile.objects.get(user=request.user)
+    profile = get_object_or_404(Profile, user=request.user)
     context={
         'orders': orders,
         'addresses': address,
@@ -549,7 +480,7 @@ def customer_dashboard(request):
 
 @login_required
 def order_detail(request, oid):
-    order = CartOrder.objects.get(user=request.user, oid=oid)
+    order = get_object_or_404(CartOrder, user=request.user, oid=oid)
     products = CartOrderItems.objects.filter(order=order)
     for product in products:
         product.user_review = ProductReview.objects.filter(user=request.user, product__title=product.item, product__vendor=product.vendor).first()
@@ -562,6 +493,7 @@ def order_detail(request, oid):
     }
     return render(request, 'order-detail.html', context)
 
+@ajax_login_required
 def make_review(request):
     if request.method == "POST":
         user = request.user
@@ -569,6 +501,7 @@ def make_review(request):
         vendor = request.POST.get("vendor")
         review = request.POST.get("review")
         rating = request.POST.get("rating")
+        oid = request.POST.get("order_id")
         
         try:
             product = Product.objects.get(title=title, vendor__title=vendor)
@@ -576,26 +509,28 @@ def make_review(request):
         except:
             print("olmadi")
             messages.error(request, "Ürün bulunamadı.")
-            return redirect("order_detail", oid=request.POST.get("order_id"))  # Replace with correct URL
+            return redirect("order_detail", oid=oid)  # Replace with correct URL
         
         # Create the review
-        try:
-            product_review = ProductReview.objects.get(user=user, product=product)
+        purchased = CartOrderItems.objects.filter(order__user=request.user, product_status="delivered", order__paid_status=True, item=product.title, vendor=product.vendor).exists()
+        if not purchased:
+            messages.error(request, "Sadece satın alıp teslim aldığınız ürünleri değerlendirebilirsiniz.")
+        elif ProductReview.objects.filter(user=user, product=product).exists():
             messages.error(request, "Ürüne zaten yorum yapılmış.")
-        except:
+        else:
             ProductReview.objects.create(user=user, product=product, review=review, rating=rating)
             # Success message
             messages.success(request, "Değerlendirme başarıyla gönderilmiştir.")
         
         # Redirect to the order detail page (adjust the URL name if necessary)
-        return redirect("order_detail", oid=request.POST.get("order_id"))  # Replace with correct URL
+        return redirect("order_detail", oid=oid)  # Replace with correct URL
     else:
         # If the request is not POST, redirect or handle differently
-        return redirect("home")  # Replace with appropriate fallback
+        return redirect("index")  # Replace with appropriate fallback
 
-
+@login_required
 def customer_orders(request):
-    orders = CartOrder.objects.filter(user=request.user)
+    orders = CartOrder.objects.filter(user=request.user, paid_status=True)
     context={
         'orders': orders,
     }
@@ -604,25 +539,12 @@ def customer_orders(request):
 @login_required
 def customer_wishlist(request):
     wishlist = Wishlist.objects.filter(user=request.user)
-    for product in wishlist:
-        print(product)
-    for product in wishlist:
-        average_rating = ProductReview.objects.filter(product__title=product).aggregate(rating=Avg('rating'))
-        average_rating = average_rating['rating'] or 0.0
-        full_stars = math.floor(average_rating)
-        half_star = 1 if (average_rating - full_stars) >= 0.5 else 0
-        empty_stars = 5 - full_stars - half_star
-        product.full_stars = ['★'] * full_stars
-        product.half_star = ['☆'] * half_star
-        product.empty_stars = ['☆'] * empty_stars
-        product.average_rating = average_rating
-    
     context ={
         'wishlist':wishlist
     }
     return render(request, "wishlist.html", context)
 
-@login_required
+@ajax_login_required
 def add_to_wishlist(request):
     context = {}
     id = request.POST.get("id")  # get() kullanımı eksik parametreyi kontrol eder
@@ -646,7 +568,7 @@ def add_to_wishlist(request):
     return JsonResponse(context)
 
 
-@login_required
+@ajax_login_required
 def remove_to_wishlist(request):
     pid = request.POST['id']
     Wishlist.objects.filter(id=pid, user=request.user).delete()  # Güvenlik için user kontrolü
@@ -718,7 +640,7 @@ def change_password(request):
         user.set_password(new_password)
         user.save()
         messages.success(request, "Şifre başarıyla değiştirildi. Tekrar giriş yapın.")
-        return redirect("userauths:login")
+        return redirect("userauths:signin")
 
     return render(request, "change_password.html")
 
@@ -756,16 +678,20 @@ def customer_address(request):
         }
     return render(request, 'myAddresses.html', context)
 
+@login_required
 def delete_address(request):
-    id = request.POST.get("id")
-    address = Address.objects.get(id=id, user=request.user)
-    address.delete()
-    return JsonResponse({"boolean": True})
+    if request.method == "POST":
+        id = request.POST.get("id")
+        address = get_object_or_404(Address, id=id, user=request.user)
+        address.delete()
+        return JsonResponse({"boolean": True})
+    return JsonResponse({"error": "Geçersiz istek"}, status=400)
 
+@login_required
 def edit_address(request):
     if request.method == "POST":
         id = request.POST.get("id")
-        address = Address.objects.get(id=id, user=request.user)
+        address = get_object_or_404(Address, id=id, user=request.user)
         title = request.POST.get("title", address.title)
         _address = request.POST.get("address", address.address)
         country = request.POST.get("country", address.country)
@@ -778,94 +704,123 @@ def edit_address(request):
         return redirect("addresses")
     return render(request, "myAddresses.html")
 
+@login_required
 def make_address_default(request):
-    id = request.POST['id']
-    Address.objects.filter(user=request.user).update(status=False)
-    Address.objects.filter(id=id, user=request.user).update(status=True)
-    return JsonResponse({"boolean": True})
+    if request.method == 'POST':
+        id = request.POST.get('id')
+        get_object_or_404(Address, id=id, user=request.user)
+        Address.objects.filter(user=request.user).update(status=False)
+        Address.objects.filter(id=id, user=request.user).update(status=True)
+        return JsonResponse({"boolean": True})
+    return JsonResponse({"error": "Geçersiz istek"}, status=400)
 
     
 def contactUs_view(request):
     return render(request,"contactus.html")
 
 def ajax_contact(request):
-    full_name = request.POST['full_name']
-    email = request.POST['email']
-    phone = request.POST['phone']
-    subject = request.POST['subject']
-    message = request.POST['message']
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        if not full_name or not email or not message:
+            return JsonResponse({"error": "Lütfen zorunlu alanları doldurun"}, status=400)
 
-    contact = ContactUs.objects.create(
-        full_name=full_name,
-        email=email,
-        phone=phone,
-        subject=subject,
-        message=message,
-    )
-    data = {
-        "bool":True,
-        "message": "Message Sent Successfully"
-    }
-    return JsonResponse({"data":data})
+        contact = ContactUs.objects.create(
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            subject=subject,
+            message=message,
+        )
+        data = {
+            "bool":True,
+            "message": "Message Sent Successfully"
+        }
+        return JsonResponse({"data":data})
+    return JsonResponse({"error": "Geçersiz istek"}, status=400)
 
 @login_required
 def apply_for_vendor(request):
     # Kullanıcı zaten satıcıysa ve başvuru durumu beklemede değilse, başvuru yapmasın
     if hasattr(request.user, 'vendor'):
-        vendor = request.user.vendor
-        if not vendor.is_application_pending:
-            return redirect('useradmin:dashboard')  # Kullanıcı zaten satıcıysa yönlendirme yapılacak sayfa
+        return redirect('useradmin:dashboard')  # Kullanıcı zaten satıcıysa yönlendirme yapılacak sayfa
 
     if request.method == 'POST':
-        # POST isteği ile gelen verileri alıyoruz
-        title = request.POST.get('title')
-        image = request.FILES.get('image')
-        description = request.POST.get('description')
-        address = request.POST.get('address')
-        country = request.POST.get('country')
-        contact = request.POST.get('contact')
-        chat_resp_time = request.POST.get('chat_resp_time', 0)
-        shipping_on_time = request.POST.get('shipping_on_time', 0)
-        authentic_rating = request.POST.get('authentic_rating', 0)
-        days_return = request.POST.get('days_return', 0)
-        warranty_period = request.POST.get('warranty_period', 0)
+        form = VendorForm(request.POST, request.FILES)
+        if form.is_valid():
+            with transaction.atomic():
 
-        request.user.is_vendor = True
-        request.user.save()
-
-        # Yeni Vendor başvurusu oluşturuluyor
-        vendor = Vendor(
-            user=request.user,
-            title=title,
-            image=image,
-            description=description,
-            address=address,
-            country=country,
-            contact=contact,
-            chat_resp_time=chat_resp_time,
-            shipping_on_time=shipping_on_time,
-            authentic_rating=authentic_rating,
-            days_return=days_return,
-            warranty_period=warranty_period,
-        )
+                new_form = form.save(commit=False)
+                new_form.user = request.user
+                new_form.save()
+                form.save_m2m()
+                profile = get_object_or_404(Profile, user=request.user)
+                if new_form.image:
+                    profile.image=new_form.image
+                profile.full_name = request.user.first_name + " " + request.user.last_name
+                profile.bio=new_form.description
+                profile.phone=new_form.contact
+                profile.country=new_form.country
+                request.user.is_vendor=True
+                profile.save()
+                request.user.save()
+        # # POST isteği ile gelen verileri alıyoruz
+        # try:
+        #     title = request.POST.get('title')
+        #     image = request.FILES.get('image')
+        #     description = request.POST.get('description')
+        #     address = request.POST.get('address')
+        #     country = request.POST.get('country')
+        #     contact = request.POST.get('contact')
+        #     chat_resp_time = request.POST.get('chat_resp_time', 0)
+        #     shipping_on_time = request.POST.get('shipping_on_time', 0)
+        #     authentic_rating = request.POST.get('authentic_rating', 0)
+        #     days_return = request.POST.get('days_return', 0)
+        #     warranty_period = request.POST.get('warranty_period', 0)
+        # except:
+        #     messages.error("Lütfen bütün alanları doldurduğunuzdan emin olun.")
+        # # Yeni Vendor başvurusu oluşturuluyor
+        # vendor = Vendor(
+        #     user=request.user,
+        #     title=title,
+        #     image=image,
+        #     description=description,
+        #     address=address,
+        #     country=country,
+        #     contact=contact,
+        #     chat_resp_time=chat_resp_time,
+        #     shipping_on_time=shipping_on_time,
+        #     authentic_rating=authentic_rating,
+        #     days_return=days_return,
+        #     warranty_period=warranty_period
+        # )
         
-        profile = Profile.objects.get(user=request.user)
-        profile.image=image
-        profile.full_name = request.user.first_name + " " + request.user.last_name,
-        profile.bio=description
-        profile.phone=contact
-        profile.country=country
+        # profile = Profile.objects.get(user=request.user)
+        # profile.image=image
+        # profile.full_name = request.user.first_name + " " + request.user.last_name
+        # profile.bio=description
+        # profile.phone=contact
+        # profile.country=country
 
-        user = User.objects.get(id=request.user.id)
-        user.phone=contact
-        user.is_vendor=True
-        with transaction.atomic():
-            vendor.save()
-            profile.save()
-            user.save()
-        return redirect('vendor_success')  # Başarı sayfasına yönlendirme
-    profile = Profile.objects.get(user=request.user)
-    return render(request, 'apply_for_vendor.html', {"profile":profile})
+        # user = User.objects.get(id=request.user.id)
+        # user.phone=contact
+        # user.is_vendor=True
 
+            return redirect('vendor_success')  # Başarı sayfasına yönlendirme
+    else:
+        profile = get_object_or_404(Profile, user=request.user)
+        form = VendorForm(initial={
+            "title": profile.full_name,
+            "description": profile.bio,
+            "contact": profile.phone,
+            "country": profile.country,
+        })
+
+    return render(request, 'apply_for_vendor.html', {"form":form})
+
+@login_required
 def vendor_success(request):
     return render(request, "vendor_success.html")

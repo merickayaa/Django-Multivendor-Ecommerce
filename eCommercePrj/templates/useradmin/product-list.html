@@ -34,9 +34,9 @@
                                         <span>Henüz Değerlendirme Yok</span>
                                     </td>
                                     <td>{{ product.date|date:"d/M/Y" }}</td>
-                                    <td>₺{{ product.price }}</td>
+                                    <td>${{ product.price }}</td>
                                     <td>
-                                        <span><a href="{% url "useradmin:edit_product" product.pid %}" class="btn btn-primary btn-sm">Edit</a></span> <span>/</span> <span><a href="{% url "useradmin:delete_product" product.pid %}" class="btn btn-primary btn-sm">Delete</a></span>
+                                        <span><a href="{% url "useradmin:edit_product" product.pid %}" class="btn btn-primary btn-sm">Edit</a></span> <span>/</span> <form method="POST" action="{% url "useradmin:delete_product" product.pid %}">{% csrf_token %}<span><button type="submit" class="btn btn-primary btn-sm">Delete</button></span></form>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -80,7 +80,7 @@
                             <td>${product.title}</td>
                             <td>${product.description}</td>
                             <td>${product.date}</td>
-                            <td>₺${product.price}</td>
+                            <td>$${product.price}</td>
                             <td>
                                 <a href="{% url "useradmin:edit_product" 'product.pid' %}" class="btn btn-primary btn-sm">Edit / Delete</a>
                             </td>
