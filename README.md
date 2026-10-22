@@ -5,8 +5,8 @@
 🔗 **Canlı Demo / Live Demo:** http://djangoecommerce-env.eba-mjr8eytm.eu-north-1.elasticbeanstalk.com/
 
 ![Ana sayfa / Home page](screenshots/anasayfa.png)
-![Satıcı sayfası / Vednor Dashboard page](screenshots/satici_sayfasi.png)
-![Kategoriler sayfası / Sign-in page](screenshots/kategoriler.png)
+![Satıcı sayfası / Vendor Dashboard page](screenshots/satici_sayfasi.png)
+![Kategoriler sayfası / Categories page](screenshots/kategoriler.png)
 ![Sepet sayfası / Cart page](screenshots/sepet.png)
 ![Ödeme sayfası / Checkout page](screenshots/odeme.png)
 ![Sipariş detay sayfası / Order detail page](screenshots/siparis_detay.png)
