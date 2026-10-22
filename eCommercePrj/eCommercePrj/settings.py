@@ -98,11 +98,11 @@ WSGI_APPLICATION = 'eCommercePrj.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'e_commerce',
+        'NAME': os.environ["DB_NAME"],
         'USER': os.environ["DB_USER"],
         'PASSWORD': os.environ["DB_PASSWORD"],
-        'HOST': 'django-project-db.cfsyoaks0gdj.eu-north-1.rds.amazonaws.com',
-        'PORT': '3306',
+        'HOST': os.environ["DB_HOST"],
+        'PORT': os.environ["DB_PORT"],
         "OPTIONS": {
                     "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
                 },
@@ -160,10 +160,10 @@ TAGGIT_STRIP_UNICODE_WHEN_SLUGIFYING = True
 
 JAZZMIN_SETTINGS = {
     "site_title": "E-Ticaret Yönetim Paneli",
-    "site_header": "Kaya Shoping",
-    "site_brand": "Kaya Shoping",
+    "site_header": "Kaya Shopping",
+    "site_brand": "Kaya Shopping",
     "welcome_sign": "E-Ticaret Yönetim Paneline Hoşgeldiniz!",
-    "copyright": "2024 Kaya Shoping",
+    "copyright": "2024 Kaya Shopping",
     "search_model": "auth.User",
     "user_avatar": "store/user_avatar.png",
     # Diğer özelleştirmeler...
