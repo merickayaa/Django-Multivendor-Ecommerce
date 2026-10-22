@@ -4,11 +4,12 @@
 
 🔗 **Canlı Demo / Live Demo:** http://djangoecommerce-env.eba-mjr8eytm.eu-north-1.elasticbeanstalk.com/
 
-![Giriş sayfası / Sign-in page](screenshots/giris.png)
 ![Ana sayfa / Home page](screenshots/anasayfa.png)
-![Profil sayfası / Profile page](screenshots/profil.png)
-![Mesajlaşma / Messaging](screenshots/mesajlar.png)
-
+![Satıcı sayfası / Vednor Dashboard page](screenshots/satici_sayfasi.png)
+![Kategoriler sayfası / Sign-in page](screenshots/kategoriler.png)
+![Sepet sayfası / Cart page](screenshots/sepet.png)
+![Ödeme sayfası / Checkout page](screenshots/odeme.png)
+![Sipariş detay sayfası / Order detail page](screenshots/siparis_detay.png)
 ---
 
 ## Türkçe
@@ -34,6 +35,7 @@ Kullanıcıların internet üzerinden alışveriş yapmalarını sağlayan çok 
 ### Kullanılan Teknolojiler
 
 - HTML, CSS, JavaScript
+- Ajax
 - Bootstrap
 - Python, Django
 - MySQL (AWS RDS)
