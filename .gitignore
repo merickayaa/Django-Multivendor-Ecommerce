@@ -12,6 +12,7 @@ __pycache__/
 eCommercePrj/db.sqlite3
 eCommercePrj/data.json
 fixtures/
+scripts/
 
 # collectstatic çıktısı (her zaman yeniden üretilebilir)
 eCommercePrj/staticfiles/

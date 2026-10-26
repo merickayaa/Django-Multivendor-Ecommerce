@@ -58,7 +58,7 @@ def dashboard(request):
     # Satıcıya ait son siparişler
     latest_orders = (
         CartOrder.objects.filter(cartorderitems__vendor=vendor, paid_status=True)
-        .distinct()
+        .annotate(vendor_total=Sum("cartorderitems__total"))
         .order_by("-order_date")[:10]
     )
 
@@ -190,8 +190,7 @@ def orders(request):
 
     # Eğer satıcı varsa, ona ait siparişleri filtreliyoruz
     if vendor:
-        orders = CartOrderItems.objects.filter(vendor=vendor).select_related("order").distinct()
-        # orders = CartOrder.objects.filter(cartorderitems__vendor=vendor).distinct()
+        orders = CartOrder.objects.filter(cartorderitems__vendor=vendor, paid_status=True).annotate(vendor_total=Sum("cartorderitems__total")).order_by("-order_date")
     else:
         orders = CartOrder.objects.none()  # Satıcı yoksa hiç sipariş göstermiyoruz
 

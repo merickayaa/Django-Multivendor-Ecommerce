@@ -24,21 +24,21 @@
             {% for order_item in orders %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ order_item.order.oid }}</td>
-                <td>{{ order_item.order.user.first_name }} {{ order_item.order.user.last_name }}</td>
-                <td>{{ order_item.order.user.email }}</td>
-                <td>{{ order_item.order.user.phone }}</td>
-                <td>{{ order_item.order.order_date|date:"d/m/Y H:i" }}</td>
-                <td>${{ order_item.total }}</td>
+                <td>{{ order_item.oid }}</td>
+                <td>{{ order_item.user.first_name }} {{ order_item.user.last_name }}</td>
+                <td>{{ order_item.user.email }}</td>
+                <td>{{ order_item.shipping_phone }}</td>
+                <td>{{ order_item.order_date|date:"d/m/Y H:i" }}</td>
+                <td>${{ order_item.vendor_total }}</td>
                 <td>
-                    {% if order_item.order.paid_status %}
+                    {% if order_item.paid_status %}
                         <span class="badge bg-success text-white">Ödendi</span>
                     {% else %}
                         <span class="badge bg-danger text-white">Ödenmedi</span>
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'useradmin:order_detail' order_item.order.id %}" class="btn btn-primary btn-sm">Detaylar</a>
+                    <a href="{% url 'useradmin:order_detail' order_item.id %}" class="btn btn-primary btn-sm">Detaylar</a>
                 </td>
             </tr>
             {% endfor %}

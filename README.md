@@ -4,6 +4,19 @@
 
 🔗 **Canlı Demo / Live Demo:** http://djangoecommerce-env.eba-mjr8eytm.eu-north-1.elasticbeanstalk.com/
 
+### 🔑 Demo Hesaplar / Demo Accounts
+
+Siteyi kayıt olmadan incelemek için aşağıdaki hesapları kullanabilirsiniz.
+You can use the accounts below to explore the site without signing up.
+
+| Hesap / Account | E-posta / Email | Şifre / Password |
+|---|---|---|---|
+| 🛒 Alıcı / Buyer | `demo.alici@example.com` | `DemoHesap2026!` |
+| 🏪 Satıcı / Seller | `demo.satici@example.com` | `DemoHesap2026!` |
+
+> Ödemeler PayPal Sandbox ile çalışır, gerçek para çekilmez.
+> Payments use PayPal Sandbox, no real money is charged.
+
 ![Ana sayfa / Home page](screenshots/anasayfa.png)
 ![Satıcı sayfası / Vendor Dashboard page](screenshots/satici_sayfasi.png)
 ![Kategoriler sayfası / Categories page](screenshots/kategoriler.png)
