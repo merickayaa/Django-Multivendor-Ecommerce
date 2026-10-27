@@ -12,23 +12,23 @@ from django.conf import settings
 # Create your models here.
 
 STATUS_CHOICE = (
-    ("process", "Processing"),
-    ("shipped", "Shipping"),
-    ("delivered", "Delivered"),
+    ("process", "Hazırlanıyor"),
+    ("shipped", "Kargoya Verildi"),
+    ("delivered", "Teslim Edildi"),
 )
 
 ORDER_STATUS_CHOICE = (
-    ("process", "Processing"),
-    ("completed", "Completed"),
+    ("process", "Devam Ediyor"),
+    ("completed", "Tamamlandı"),
 #   ("İptal", "Delivered"),
 )
 
 STATUS = (
-    ("draft", "Draft"),
-    ("disabled", "Disabled"),
-    ("rejected", "Rejected"),
-    ("in_review", "In_Review"),
-    ("published", "Published"),
+    ("draft", "Taslak"),
+    ("disabled", "Devre Dışı"),
+    ("rejected", "Reddedildi"),
+    ("in_review", "Değerlendiriliyor"),
+    ("published", "Herkese Açık"),
 )
 
 PAYMENT_STATE_CHOICE = (

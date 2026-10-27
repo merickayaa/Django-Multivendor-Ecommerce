@@ -200,30 +200,39 @@ def orders(request):
     
     return render(request, "useradmin/orders.html", context)
 @admin_required
-def order_detail(request,id):
+def order_detail(request,oid):
     vendor = get_object_or_404(Vendor, user=request.user)
-    order = get_object_or_404(CartOrder, id=id)
+    order = get_object_or_404(CartOrder, oid=oid, paid_status=True)
     order_items = CartOrderItems.objects.filter(order=order, vendor=vendor)
+    vendor_total = order_items.aggregate(total=Sum("total"))["total"]
+    vendor_completed = not order_items.exclude(product_status="delivered").exists()
     if not order_items.exists():
         raise Http404
     context={
         "order_items":order_items,
         "order":order,
         "order_first_item": order_items.first(),
+        "vendor_total":vendor_total,
+        "vendor_completed":vendor_completed,
+
     }
     return render(request, "useradmin/order_detail.html", context)
 
 @admin_required
 def change_order_status(request,oid):
-    order = get_object_or_404(CartOrder, oid=oid)
+    order = get_object_or_404(CartOrder, oid=oid, payment_status="paid")
     vendor = get_object_or_404(Vendor, user=request.user)
     order_items = CartOrderItems.objects.filter(order=order, vendor=vendor)
     if request.method == "POST":
         status = request.POST.get("status")
-        if status in STATUS_CHOICE:
+        if not status in dict(STATUS_CHOICE):
+            messages.error(request, "Geçersiz kargo durumu.")
+        elif order_items.filter(product_status="delivered").exists():
+            messages.error(request, "Teslim edilmiş siparişin durumu değiştirilemez.")
+        else:
             order_items.update(product_status=status)
-            messages.success(request, f"Order Status Changed To {status}")
-    return redirect("useradmin:order_detail", order.id)
+            messages.success(request, f"Sipariş Durumu {dict(STATUS_CHOICE)[status]} olarak değiştirildi.")
+    return redirect("useradmin:order_detail", order.oid)
 
 @admin_required
 def shop_page(request):

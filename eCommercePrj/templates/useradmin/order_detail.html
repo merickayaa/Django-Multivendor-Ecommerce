@@ -23,7 +23,7 @@
                     </div>
                     <div class="col-md-6">
                         <h5 class="fw-bold text-dark">Telefon:</h5>
-                        <p class="text-muted">{{ order.user.phone }}</p>
+                        <p class="text-muted">{{ order.shipping_phone }}</p>
                     </div>
                 </div>
             </div>
@@ -49,13 +49,19 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <h5 class="fw-bold text-dark">Toplam Tutar:</h5>
-                            <p class="text-success fw-bold">${% for order_item in order_items.all %}{{order_item.total}}{% endfor %}</p>
+                            <p class="text-success fw-bold">${{vendor_total}}</p>
                         </div>
                         <div class="col-md-6">
                             <h5 class="fw-bold text-dark">Sipariş Durumu:</h5>
-                            <span class="badge {% if order.is_completed == 'Process' %}bg-warning text-dark{% elif order.is_completed == 'Completed' %}bg-success{% endif %}">
-                                {{ order.is_completed }}
+                            {% if vendor_completed %}
+                            <span class="badge text-dark bg-success">
+                                Tamamlandı
                             </span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">
+                                Devam Ediyor
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="mb-3 d-flex align-items-center">
@@ -67,7 +73,9 @@
                                 <option value="shipped" {% if order_first_item.product_status == 'shipped' %}selected{% endif %}>Kargoya Verildi</option>
                                 <option value="delivered" {% if order_first_item.product_status == 'delivered' %}selected{% endif %}>Teslim Edildi</option>
                             </select>
-                            <button class="btn btn-primary ms-2" type="submit">Kaydet</button>
+                            {% if not vendor_completed %}
+                                <button class="btn btn-primary ms-2" type="submit">Kaydet</button>
+                            {% endif %}
                         </form>
                     </div>
                 </div>
