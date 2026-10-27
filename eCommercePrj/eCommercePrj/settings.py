@@ -29,7 +29,7 @@ SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = os.environ.get('IS_DEV', 'False') == 'True'
 
 ALLOWED_HOSTS = [os.environ['APP_HOST']]
-# CSRF_TRUSTED_ORIGINS = [os.environ['APP_HOST']]
+CSRF_TRUSTED_ORIGINS = [os.environ['APP_HOST']]
 
 
 # Application definition
